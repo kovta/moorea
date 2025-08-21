@@ -1,0 +1,163 @@
+# Comprehensive Aesthetic Vocabulary and Keyword Mappings
+# Updated: 2024-2025 Fashion Trends
+# Sources: TikTok, Pinterest, Instagram, Fashion Blogs
+
+aesthetics:
+  # Classic Aesthetics
+  minimalist:
+    keywords: ["clean lines", "white space", "neutral palette", "simple geometry", "uncluttered space"]
+    description: "Clean, simple, functional design with neutral colors"
+  
+  maximalist:
+    keywords: ["bold patterns", "vibrant colors", "eclectic textures", "layered decor", "kaleidoscopic design"]
+    description: "More-is-more philosophy with bold patterns and colors"
+  
+  vintage:
+    keywords: ["antique furniture", "retro fashion", "aged textures", "nostalgic items", "old photographs"]
+    description: "Timeless items with history and character"
+  
+  retro:
+    keywords: ["80s neon", "vintage electronics", "retro patterns", "classic cars", "old school aesthetic"]
+    description: "Specific past era revival, typically 70s-90s"
+
+  # Academic Aesthetics  
+  dark_academia:
+    keywords: ["vintage library", "tweed blazer", "leather satchel", "gothic architecture", "old books"]
+    description: "Scholarly, gothic university life with dark colors and tweeds"
+  
+  light_academia:
+    keywords: ["sunny library", "cream sweater", "botanical study", "classical art", "morning coffee"]
+    description: "Bright, optimistic version of academia with light colors"
+  
+  romantic_academia:
+    keywords: ["poetry books", "flowing dress", "soft lighting", "handwritten letters", "vintage romance"]
+    description: "Romantic, dreamy take on academic aesthetics"
+
+  # Internet Culture Aesthetics
+  y2k:
+    keywords: ["metallic clothing", "futuristic sunglasses", "holographic material", "cyber aesthetic", "early 2000s tech"]
+    description: "Early 2000s futuristic fashion and technology"
+  
+  indie_sleaze:
+    keywords: ["messy hair", "cigarettes", "vintage band tee", "torn fishnets", "party photography"]
+    description: "Gritty early 2000s indie culture revival"
+  
+  coquette:
+    keywords: ["lace dress", "pink ribbon", "pearl jewelry", "soft curls", "feminine bow"]
+    description: "Hyper-feminine, innocent aesthetic with Victorian influence"
+  
+  clean_girl:
+    keywords: ["slicked back hair", "dewy skin", "minimal makeup", "gold jewelry", "neutral tones"]
+    description: "Natural, effortless beauty with minimal styling"
+  
+  soft_girl:
+    keywords: ["pastel colors", "cute accessories", "soft makeup", "fluffy sweater", "gentle aesthetic"]
+    description: "Soft, cute, pastel-focused feminine style"
+  
+  e_girl:
+    keywords: ["colorful hair", "winged eyeliner", "platform boots", "striped shirt", "alternative makeup"]
+    description: "Alternative online culture with bold makeup and edgy style"
+
+  # Lifestyle Aesthetics
+  cottagecore:
+    keywords: ["wildflower field", "rustic cabin", "vintage floral dress", "picnic basket", "homemade bread"]
+    description: "Romanticized rural farm life and self-sufficiency"
+  
+  goblincore:
+    keywords: ["mushroom forest", "shiny objects", "earth tones", "vintage trinkets", "woodland creatures"]
+    description: "Earth-focused aesthetic celebrating small treasures and nature"
+  
+  fairycore:
+    keywords: ["butterfly wings", "flower crown", "magical forest", "ethereal dress", "sparkly makeup"]
+    description: "Whimsical, magical fairy-inspired aesthetic"
+  
+  coastal_grandmother:
+    keywords: ["linen clothing", "beach house", "hydrangea flowers", "wicker furniture", "ocean breeze"]
+    description: "Relaxed coastal living with natural textures"
+
+  # Urban and Street Aesthetics
+  streetwear:
+    keywords: ["oversized hoodie", "sneaker culture", "graphic tee", "urban landscape", "skateboard"]
+    description: "Contemporary urban fashion and culture"
+  
+  hypebeast:
+    keywords: ["limited edition sneakers", "designer collaboration", "street fashion", "branded clothing", "sneaker collection"]
+    description: "High-end streetwear and exclusive fashion drops"
+  
+  techwear:
+    keywords: ["technical fabric", "futuristic design", "utility vest", "cyberpunk fashion", "functional clothing"]
+    description: "Functional, futuristic clothing with technical materials"
+  
+  cyberpunk:
+    keywords: ["neon lights", "dystopian city", "metallic clothing", "digital aesthetic", "futuristic technology"]
+    description: "High-tech dystopian future aesthetic"
+
+  # Outdoor and Nature Aesthetics
+  gorpcore:
+    keywords: ["hiking gear", "puffer jacket", "mountain landscape", "technical outdoor wear", "camping equipment"]
+    description: "Outdoor utility fashion and nature connection"
+  
+  cabincore:
+    keywords: ["cozy cabin", "buffalo plaid", "flannel shirt", "hiking boots", "campfire"]
+    description: "Cozy outdoor living with rustic comfort"
+
+  # Alternative and Subculture Aesthetics  
+  grunge:
+    keywords: ["ripped jeans", "flannel shirt", "combat boots", "messy hair", "alternative music"]
+    description: "90s alternative culture with disheveled, rebellious style"
+  
+  goth:
+    keywords: ["black clothing", "dark makeup", "gothic architecture", "leather accessories", "dramatic silhouette"]
+    description: "Dark, dramatic aesthetic with gothic influences"
+  
+  punk:
+    keywords: ["leather jacket", "safety pins", "mohawk hair", "band patches", "rebellious style"]
+    description: "Anti-establishment subculture with DIY fashion"
+
+  # Sports and Activity Aesthetics
+  tenniscore:
+    keywords: ["tennis skirt", "polo shirt", "court shoes", "athletic wear", "preppy sportswear"]
+    description: "Tennis-inspired fashion and lifestyle"
+  
+  balletcore:
+    keywords: ["ballet flats", "leotard", "hair bow", "graceful pose", "soft pink"]
+    description: "Ballet-inspired elegant and graceful aesthetic"
+
+  # Emerging 2024-2025 Trends
+  vanilla_girl:
+    keywords: ["neutral makeup", "simple outfit", "clean aesthetic", "minimalist style", "effortless look"]
+    description: "Simple, minimalist style popularized by Hailey Bieber"
+  
+  solar_punk:
+    keywords: ["sustainable fashion", "green technology", "eco-friendly design", "solar panels", "futuristic garden"]
+    description: "Optimistic environmental future with sustainable technology"
+  
+  cherry_everything:
+    keywords: ["cherry red", "fruit motifs", "sweet aesthetic", "red lipstick", "cherry print"]
+    description: "Cherry-inspired colors and motifs across fashion and beauty"
+  
+  dark_siren:
+    keywords: ["wet hair", "dark makeup", "aquatic theme", "moody mermaid", "edgy beauty"]
+    description: "Edgy aquatic-inspired beauty with dark, mysterious elements"
+  
+  aquamarine_makeup:
+    keywords: ["blue eyeshadow", "60s makeup", "bold eye", "aqua colors", "retro beauty"]
+    description: "Bold aquamarine makeup inspired by 60s with modern twist"
+
+  # Comfort and Normcore
+  normcore:
+    keywords: ["basic clothing", "everyday wear", "comfortable style", "unpretentious fashion", "ordinary aesthetic"]
+    description: "Deliberately ordinary, comfortable everyday clothing"
+  
+  cardigancore:
+    keywords: ["knit cardigan", "cozy sweater", "layered outfit", "soft texture", "comfortable fashion"]
+    description: "Cardigan-focused comfort fashion trend"
+
+  # Traditional and Preppy
+  preppy:
+    keywords: ["blazer jacket", "pearl necklace", "plaid pattern", "boat shoes", "collegiate style"]
+    description: "Classic American collegiate and country club style"
+  
+  old_money:
+    keywords: ["cashmere sweater", "riding boots", "understated luxury", "quality fabrics", "timeless elegance"]
+    description: "Understated wealth and timeless luxury fashion"
