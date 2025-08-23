@@ -66,6 +66,22 @@ class AestheticService:
         
         aesthetic_data = self._aesthetics_data.get(aesthetic, {})
         return aesthetic_data.get('description')
+    
+    async def get_negative_keywords_for_aesthetic(self, aesthetic: str) -> List[str]:
+        """Get negative keywords to avoid for a specific aesthetic."""
+        if self._aesthetics_data is None:
+            await self._load_aesthetics_data()
+        
+        aesthetic_data = self._aesthetics_data.get(aesthetic, {})
+        return aesthetic_data.get('negative_keywords', [])
+    
+    async def get_color_palette_for_aesthetic(self, aesthetic: str) -> List[str]:
+        """Get preferred color palette for a specific aesthetic."""
+        if self._aesthetics_data is None:
+            await self._load_aesthetics_data()
+        
+        aesthetic_data = self._aesthetics_data.get(aesthetic, {})
+        return aesthetic_data.get('color_palette', [])
 
 
 # Global service instance

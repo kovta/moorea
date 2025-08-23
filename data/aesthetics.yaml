@@ -161,3 +161,237 @@ aesthetics:
   old_money:
     keywords: ["cashmere sweater", "riding boots", "understated luxury", "quality fabrics", "timeless elegance"]
     description: "Understated wealth and timeless luxury fashion"
+
+  # Beach and Ocean Aesthetics
+  surfcore:
+    keywords: ["surf board", "beach waves", "sun-bleached hair", "wetsuit", "ocean vibes", "beach lifestyle", "saltwater", "surfing culture"]
+    description: "Laid-back surf culture and beach lifestyle"
+  
+  coastal:
+    keywords: ["ocean view", "beach house", "nautical stripes", "seashells", "driftwood", "lighthouse", "sandy beach"]
+    description: "Ocean-inspired relaxed coastal living"
+  
+  beach_casual:
+    keywords: ["linen shirt", "flip flops", "sun hat", "beach cover up", "tropical print", "relaxed vacation wear"]
+    description: "Relaxed seaside fashion and beach vacation style"
+  
+  tropical:
+    keywords: ["palm trees", "tropical flowers", "bright colors", "hawaiian shirt", "island paradise", "coconut drink"]
+    description: "Vibrant tropical island paradise aesthetic"
+
+  # 2024-2025 Trending Cores
+  mob_wife:
+    keywords: ["fur coat", "leopard print", "gold jewelry", "big hair", "luxury brands", "statement nails", "bold makeup"]
+    description: "Glamorous mafia-inspired luxury lifestyle with bold fashion"
+  
+  office_siren:
+    keywords: ["pencil skirt", "silk blouse", "red lipstick", "professional attire", "sophisticated heels", "briefcase"]
+    description: "Sultry professional office wear with confident styling"
+  
+  grandpacore:
+    keywords: ["cardigan sweater", "vintage hat", "loafers", "baggy pants", "reading glasses", "vintage patterns"]
+    description: "Nostalgic grandfather-inspired comfortable vintage style"
+  
+  barbiecore:
+    keywords: ["hot pink", "blonde hair", "sparkly dress", "high heels", "glamorous makeup", "princess vibes"]
+    description: "Barbie doll-inspired hyper-feminine pink aesthetic"
+  
+  blokecore:
+    keywords: ["football jersey", "retro tracksuit", "athletic shoes", "sports culture", "casual sportwear", "british football"]
+    description: "British football culture-inspired athletic casual wear"
+
+  # Kawaii and Japanese Aesthetics
+  kawaii:
+    keywords: ["cute characters", "pastel colors", "heart shapes", "anime style", "sweet aesthetic", "japanese culture"]
+    description: "Japanese cute culture with adorable characters and soft colors"
+  
+  decora:
+    keywords: ["colorful accessories", "hair clips", "layered jewelry", "rainbow colors", "cute stickers", "playful fashion"]
+    description: "Maximalist Japanese street fashion with excessive cute accessories"
+  
+  fairy_kei:
+    keywords: ["pastel rainbow", "unicorn motifs", "star accessories", "kawaii characters", "dreamy pastels", "magical girl"]
+    description: "Pastel fairy-inspired Japanese street fashion"
+
+  # Music and Subculture Aesthetics
+  indie:
+    keywords: ["thrift store finds", "vintage band tee", "indie music", "alternative fashion", "artistic expression", "non-mainstream"]
+    description: "Independent culture with thrifted vintage and artistic expression"
+  
+  rockstar:
+    keywords: ["leather jacket", "band merchandise", "concert venue", "electric guitar", "stage lights", "rock music"]
+    description: "Rock music culture with edgy performance-ready style"
+  
+  emo:
+    keywords: ["black eyeliner", "band t-shirt", "skinny jeans", "emotional lyrics", "dark aesthetic", "alternative music"]
+    description: "Emotional hardcore music subculture with dramatic dark styling"
+
+  # Vintage Era Aesthetics
+  art_deco:
+    keywords: ["geometric patterns", "gold accents", "1920s fashion", "elegant lines", "vintage glamour", "sophisticated design"]
+    description: "1920s Art Deco elegance with geometric patterns and luxury"
+  
+  mod:
+    keywords: ["1960s fashion", "mini skirt", "bold patterns", "go-go boots", "geometric prints", "swinging sixties"]
+    description: "1960s mod fashion with bold geometric patterns and mini skirts"
+  
+  seventies:
+    keywords: ["flare jeans", "bohemian style", "earth tones", "fringe details", "folk music", "hippie culture"]
+    description: "1970s bohemian and hippie-inspired earth-toned fashion"
+  
+  eighties:
+    keywords: ["neon colors", "shoulder pads", "synthwave", "bold makeup", "geometric shapes", "retro futurism"]
+    description: "1980s bold neon aesthetic with geometric patterns and synth culture"
+
+  # Cottagecore Variations
+  grandmacore:
+    keywords: ["floral apron", "knitting needles", "vintage china", "home baking", "cozy sweater", "traditional crafts"]
+    description: "Grandmother-inspired domestic comfort and traditional skills"
+  
+  farmcore:
+    keywords: ["overalls", "straw hat", "vegetable garden", "farm animals", "rural lifestyle", "country living"]
+    description: "Authentic farm life and agricultural lifestyle"
+  
+  goblincore:
+    keywords: ["mushroom forest", "shiny objects", "earth tones", "vintage trinkets", "woodland creatures", "moss covered"]
+    description: "Earth-focused aesthetic celebrating small treasures and nature"
+
+  # Gothic and Dark Aesthetics
+  dark_romantic:
+    keywords: ["black lace", "velvet fabric", "gothic jewelry", "mysterious atmosphere", "dramatic makeup", "romantic darkness"]
+    description: "Romantic gothic aesthetic with dark elegance and mystery"
+  
+  witch:
+    keywords: ["black clothing", "crystals", "tarot cards", "mystical symbols", "herbal remedies", "moon phases"]
+    description: "Mystical witchcraft aesthetic with natural magic elements"
+  
+  vampire:
+    keywords: ["dark lipstick", "gothic clothing", "pale skin", "dramatic cape", "mysterious allure", "gothic romance"]
+    description: "Vampiric gothic aesthetic with pale elegance and dark romance"
+
+  # Tech and Future Aesthetics
+  vaporwave:
+    keywords: ["synthwave colors", "retro computer", "neon grid", "80s nostalgia", "digital aesthetic", "vhs static"]
+    description: "Nostalgic 80s-90s digital culture with neon synthwave colors"
+  
+  cyberdelic:
+    keywords: ["psychedelic colors", "digital art", "virtual reality", "glitch effects", "neon fractals", "cyber space"]
+    description: "Psychedelic cyberpunk fusion with trippy digital effects"
+  
+  steampunk:
+    keywords: ["brass gears", "victorian fashion", "mechanical devices", "leather corset", "goggles", "industrial design"]
+    description: "Victorian-era inspired retro-futuristic industrial aesthetic"
+
+  # Comfort and Cozy Aesthetics
+  hygge:
+    keywords: ["cozy blanket", "warm fireplace", "comfort food", "soft lighting", "peaceful atmosphere", "danish lifestyle"]
+    description: "Danish cozy comfort lifestyle focused on wellbeing and warmth"
+  
+  cozycore:
+    keywords: ["warm sweater", "hot cocoa", "soft blanket", "reading nook", "comfortable home", "peaceful vibes"]
+    description: "Ultimate comfort and cozy home living aesthetic"
+  
+  sleepcore:
+    keywords: ["soft pajamas", "comfortable bed", "dreamy atmosphere", "moon and stars", "peaceful sleep", "bedroom sanctuary"]
+    description: "Sleep and dream-focused comfort aesthetic"
+
+  # Activity and Sport Aesthetics
+  skatercore:
+    keywords: ["skateboard", "baggy jeans", "vans shoes", "street culture", "urban skating", "alternative sports"]
+    description: "Skateboard culture with baggy casual streetwear"
+  
+  yogacore:
+    keywords: ["yoga mat", "athletic wear", "meditation pose", "zen atmosphere", "wellness lifestyle", "mindful living"]
+    description: "Yoga and wellness lifestyle with comfortable athletic wear"
+  
+  runcore:
+    keywords: ["running shoes", "athletic gear", "morning jog", "fitness lifestyle", "activewear", "health focused"]
+    description: "Running and fitness-focused athletic lifestyle"
+
+  # Luxury and High Fashion
+  quiet_luxury:
+    keywords: ["understated elegance", "quality fabrics", "minimal branding", "timeless design", "sophisticated style", "stealth wealth"]
+    description: "Understated luxury without obvious logos or branding"
+  
+  maximalist_luxury:
+    keywords: ["designer logos", "bold patterns", "statement jewelry", "luxury brands", "opulent style", "excessive glamour"]
+    description: "Bold luxury fashion with obvious designer branding and excess"
+
+  # Color-Based Aesthetics
+  monochrome:
+    keywords: ["black and white", "grayscale", "minimal color", "stark contrast", "simple palette", "classic elegance"]
+    description: "Black and white or single-color focused aesthetic"
+  
+  neon:
+    keywords: ["bright colors", "electric hues", "glowing lights", "vibrant energy", "fluorescent fashion", "bold statements"]
+    description: "Bright fluorescent and electric color palette"
+  
+  earth_tones:
+    keywords: ["brown colors", "natural palette", "warm beiges", "terracotta", "sage green", "organic colors"]
+    description: "Natural earth-inspired warm and neutral color palette"
+
+  # Creative and Artistic
+  art_hoe:
+    keywords: ["paint stains", "canvas bag", "colorful makeup", "artistic expression", "creative tools", "aesthetic photos"]
+    description: "Artistic creative lifestyle with paint-stained clothes and art supplies"
+  
+  bookish:
+    keywords: ["stacked books", "reading glasses", "literary quotes", "cozy library", "vintage novels", "intellectual style"]
+    description: "Book-loving intellectual aesthetic with literary references"
+  
+  poet:
+    keywords: ["handwritten notes", "vintage typewriter", "romantic verses", "flowing scarves", "thoughtful expression", "artistic soul"]
+    description: "Poetic and romantic creative expression with vintage writing tools"
+
+  # Bridal and Wedding Aesthetics
+  bridal_ballgown:
+    keywords: ["voluminous skirt", "fitted bodice", "princess silhouette", "cathedral train", "luxury fabric", "formal wedding", "fairy tale dress"]
+    description: "Classic ball gown bridal style with dramatic volume and regal elegance"
+  
+  bridal_mermaid:
+    keywords: ["fitted silhouette", "curves accentuating", "flare at knee", "dramatic train", "body hugging", "glamorous wedding", "red carpet style"]
+    description: "Form-fitting bridal style that flares dramatically at the knee"
+  
+  bridal_boho:
+    keywords: ["flowing fabric", "delicate lace", "flower crown", "natural beauty", "beach wedding", "garden ceremony", "free spirit bride"]
+    description: "Bohemian bridal style with flowing fabrics and natural romantic elements"
+  
+  bridal_vintage:
+    keywords: ["vintage lace", "antique details", "heirloom jewelry", "classic silhouette", "timeless elegance", "heritage style", "family tradition"]
+    description: "Vintage-inspired bridal style with antique details and timeless elegance"
+  
+  bridal_artdeco:
+    keywords: ["art deco white wedding dress", "1920s white bridal gown", "beaded ivory wedding dress", "vintage wedding ceremony elegant", "gatsby white wedding", "golden wedding details white dress", "vintage bridal portrait white"]
+    negative_keywords: ["colorful", "bright colors", "traditional costume", "architecture", "landscape", "casual wear"]
+    color_palette: ["white", "ivory", "champagne", "gold", "cream", "pearl"]
+    description: "Art Deco inspired bridal style with geometric beading and 1920s glamour"
+  
+  bridal_princess:
+    keywords: ["fairy tale dress", "royal wedding", "dramatic sleeves", "ornate details", "castle ceremony", "regal style", "crown worthy"]
+    description: "Princess-inspired bridal style fit for a royal wedding"
+  
+  bridal_minimalist:
+    keywords: ["minimalist white wedding dress", "modern white bridal gown", "simple ivory wedding dress", "contemporary white bride", "elegant wedding venue white flowers", "modern wedding ceremony minimal", "minimalist bride portrait white"]
+    negative_keywords: ["colorful", "bright colors", "traditional costume", "architecture", "landscape", "neon", "vibrant"]
+    color_palette: ["white", "ivory", "cream", "champagne", "blush", "pale pink"]
+    description: "Modern minimalist bridal style with clean lines and understated luxury"
+  
+  bridal_garden:
+    keywords: ["outdoor ceremony", "natural setting", "soft fabrics", "floral motifs", "romantic garden", "nature inspired", "organic beauty"]
+    description: "Garden wedding inspired bridal style perfect for outdoor ceremonies"
+  
+  bridal_romantic:
+    keywords: ["soft lace", "feminine details", "flowing train", "delicate embroidery", "rose motifs", "candlelit ceremony", "dreamy romance"]
+    description: "Ultra-romantic bridal style with soft feminine details and dreamy elements"
+  
+  bridal_classic:
+    keywords: ["timeless design", "traditional silhouette", "white gown", "church wedding", "elegant simplicity", "formal ceremony", "bridal tradition"]
+    description: "Classic traditional bridal style with timeless elegance and formal beauty"
+  
+  bridal_modern:
+    keywords: ["contemporary design", "fashion forward", "unique details", "non traditional", "architectural lines", "statement piece", "trendsetting bride"]
+    description: "Modern innovative bridal style with contemporary fashion-forward design"
+  
+  bridal_destination:
+    keywords: ["travel friendly", "lightweight fabric", "beach ceremony", "tropical wedding", "vacation style", "resort elegance", "destination romance"]
+    description: "Destination wedding bridal style perfect for travel and exotic locations"

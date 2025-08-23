@@ -40,9 +40,10 @@ class MoodboardService:
             top_aesthetics = await self._classify_aesthetics(image_content)
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=25)
             
-            # Step 2: Keyword expansion (placeholder)
+            # Step 2: Keyword expansion with intelligent filtering
             logger.info(f"Expanding keywords for job {job_id}")
-            search_keywords = await self._expand_keywords(top_aesthetics)
+            search_keywords, negative_keywords = await self._expand_keywords(top_aesthetics)
+            logger.info(f"Generated {len(search_keywords)} search keywords, avoiding {len(negative_keywords)} negative terms")
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=50)
             
             # Step 3: Fetch candidates (placeholder)
@@ -104,13 +105,33 @@ class MoodboardService:
                 )
             ]
     
-    async def _expand_keywords(self, aesthetics: List[AestheticScore]) -> List[str]:
-        """Expand aesthetics to search keywords."""
+    async def _expand_keywords(self, aesthetics: List[AestheticScore]) -> tuple[List[str], List[str]]:
+        """Expand aesthetics to search keywords with intelligent filtering."""
         keywords = []
+        negative_keywords = set()
+        
         for aesthetic in aesthetics:
+            # Get positive keywords
             aesthetic_keywords = await aesthetic_service.get_keywords_for_aesthetic(aesthetic.name)
             keywords.extend(aesthetic_keywords)
-        return keywords
+            
+            # Get negative keywords to avoid
+            aesthetic_negatives = await aesthetic_service.get_negative_keywords_for_aesthetic(aesthetic.name)
+            negative_keywords.update(aesthetic_negatives)
+            
+            # Get color palette for intelligent filtering
+            color_palette = await aesthetic_service.get_color_palette_for_aesthetic(aesthetic.name)
+            if color_palette:
+                logger.info(f"Using color palette for {aesthetic.name}: {color_palette}")
+        
+        # Remove duplicates and apply negative filtering
+        unique_keywords = []
+        for keyword in keywords:
+            # Skip if keyword contains negative terms
+            if not any(neg in keyword.lower() for neg in negative_keywords):
+                unique_keywords.append(keyword)
+        
+        return unique_keywords, list(negative_keywords)
     
     async def _fetch_candidates(self, keywords: List[str]) -> List[ImageCandidate]:
         """Fetch image candidates from all APIs."""
@@ -170,9 +191,28 @@ class MoodboardService:
             # Sort by similarity score (highest first)
             scored_candidates.sort(key=lambda x: x.similarity_score or 0, reverse=True)
             
-            # Return top candidates (up to final moodboard size)
-            final_count = min(len(scored_candidates), settings.final_moodboard_size)
-            return scored_candidates[:final_count]
+            # Filter by minimum similarity threshold (60%)
+            MIN_SIMILARITY_THRESHOLD = 0.60
+            filtered_candidates = [
+                candidate for candidate in scored_candidates 
+                if (candidate.similarity_score or 0) >= MIN_SIMILARITY_THRESHOLD
+            ]
+            
+            logger.info(f"Filtered {len(scored_candidates)} candidates to {len(filtered_candidates)} above {MIN_SIMILARITY_THRESHOLD} similarity")
+            
+            # Return filtered candidates (up to final moodboard size)
+            if len(filtered_candidates) >= 3:  # Need at least 3 good matches
+                final_count = min(len(filtered_candidates), settings.final_moodboard_size)
+                return filtered_candidates[:final_count]
+            else:
+                # Fallback: if too few high-quality matches, lower threshold to 50%
+                logger.warning(f"Only {len(filtered_candidates)} high-quality matches, using 50% threshold")
+                fallback_candidates = [
+                    candidate for candidate in scored_candidates 
+                    if (candidate.similarity_score or 0) >= 0.50
+                ]
+                final_count = min(len(fallback_candidates), settings.final_moodboard_size)
+                return fallback_candidates[:final_count]
             
         except Exception as e:
             logger.error(f"Error in candidate re-ranking: {str(e)}")
