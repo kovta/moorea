@@ -60,8 +60,8 @@ aesthetics:
 
   # Lifestyle Aesthetics
   cottagecore:
-    keywords: ["wildflower field", "rustic cabin", "vintage floral dress", "picnic basket", "homemade bread"]
-    description: "Romanticized rural farm life and self-sufficiency"
+    keywords: ["vintage floral dress", "wildflower field", "cottagecore outfit", "rustic cabin", "flowy cottagecore dress", "picnic basket", "cottagecore aesthetic clothing", "homemade bread"]
+    description: "Romanticized rural farm life and self-sufficiency with vintage clothing and natural settings"
   
   goblincore:
     keywords: ["mushroom forest", "shiny objects", "earth tones", "vintage trinkets", "woodland creatures"]
@@ -103,8 +103,8 @@ aesthetics:
 
   # Alternative and Subculture Aesthetics  
   grunge:
-    keywords: ["ripped jeans", "flannel shirt", "combat boots", "messy hair", "alternative music"]
-    description: "90s alternative culture with disheveled, rebellious style"
+    keywords: ["ripped jeans", "grunge concert venue", "flannel shirt", "vintage record store", "combat boots", "alternative music aesthetic", "grunge outfit", "messy grunge style"]
+    description: "90s alternative culture with disheveled style and underground music venues"
   
   goth:
     keywords: ["black clothing", "dark makeup", "gothic architecture", "leather accessories", "dramatic silhouette"]
@@ -116,8 +116,8 @@ aesthetics:
 
   # Sports and Activity Aesthetics
   tenniscore:
-    keywords: ["tennis skirt", "polo shirt", "court shoes", "athletic wear", "preppy sportswear"]
-    description: "Tennis-inspired fashion and lifestyle"
+    keywords: ["tennis skirt", "tennis court", "polo shirt", "tennis racket", "preppy sportswear", "tennis club", "athletic tenniscore outfit", "tennis lifestyle"]
+    description: "Tennis-inspired fashion and country club lifestyle"
   
   balletcore:
     keywords: ["ballet flats", "leotard", "hair bow", "graceful pose", "soft pink"]
@@ -155,12 +155,12 @@ aesthetics:
 
   # Traditional and Preppy
   preppy:
-    keywords: ["blazer jacket", "pearl necklace", "plaid pattern", "boat shoes", "collegiate style"]
-    description: "Classic American collegiate and country club style"
+    keywords: ["preppy sweater", "ralph lauren style", "preppy outfit", "country club fashion", "collegiate preppy style", "preppy blazer", "preppy aesthetic clothing", "ivy league style"]
+    description: "Classic American collegiate and country club style with preppy brands and timeless pieces"
   
   old_money:
-    keywords: ["cashmere sweater", "riding boots", "understated luxury", "quality fabrics", "timeless elegance"]
-    description: "Understated wealth and timeless luxury fashion"
+    keywords: ["cashmere sweater", "old money aesthetic", "luxury sweater", "understated luxury outfit", "quality old money fashion", "timeless elegance style", "old money clothing", "heritage luxury brand"]
+    description: "Understated wealth and timeless luxury fashion with heritage brands and quality pieces"
 
   # Beach and Ocean Aesthetics
   surfcore:
@@ -345,16 +345,22 @@ aesthetics:
 
   # Bridal and Wedding Aesthetics
   bridal_ballgown:
-    keywords: ["voluminous skirt", "fitted bodice", "princess silhouette", "cathedral train", "luxury fabric", "formal wedding", "fairy tale dress"]
-    description: "Classic ball gown bridal style with dramatic volume and regal elegance"
+    keywords: ["ballgown wedding dress white", "luxury castle venue", "princess wedding dress", "elegant rose arrangements", "voluminous white bridal gown", "crystal chandelier venue", "fairy tale wedding dress", "royal wedding flowers", "dramatic white ballgown"]
+    negative_keywords: ["colorful", "bright colors", "traditional costume", "casual wear", "indian wedding", "cultural dress"]
+    color_palette: ["white", "ivory", "champagne", "pearl", "cream", "gold accent"]
+    description: "Classic Western ball gown bridal style with dramatic volume, regal venues, and luxury elements"
   
   bridal_mermaid:
-    keywords: ["fitted silhouette", "curves accentuating", "flare at knee", "dramatic train", "body hugging", "glamorous wedding", "red carpet style"]
-    description: "Form-fitting bridal style that flares dramatically at the knee"
+    keywords: ["mermaid wedding dress white", "fitted ivory bridal gown", "curves white wedding dress", "glamorous wedding venue", "dramatic orchid arrangements", "luxury hotel wedding", "sophisticated floral design", "elegant wedding reception", "red carpet wedding"]
+    negative_keywords: ["colorful", "bright colors", "traditional costume", "casual wear", "indian wedding", "rustic venues"]
+    color_palette: ["white", "ivory", "champagne", "pearl", "cream"]
+    description: "Form-fitting Western bridal style with glamorous venues and sophisticated elements"
   
   bridal_boho:
-    keywords: ["flowing fabric", "delicate lace", "flower crown", "natural beauty", "beach wedding", "garden ceremony", "free spirit bride"]
-    description: "Bohemian bridal style with flowing fabrics and natural romantic elements"
+    keywords: ["boho white wedding dress", "flowing ivory bridal gown", "bohemian lace wedding dress", "outdoor garden wedding", "wildflower arrangements", "natural wedding venue", "beach ceremony setup", "rustic wedding flowers", "boho wedding decor"]
+    negative_keywords: ["colorful", "bright colors", "traditional costume", "indian wedding", "cultural dress", "ethnic patterns", "formal venues"]
+    color_palette: ["white", "ivory", "cream", "champagne", "nude", "blush"]
+    description: "Bohemian Western bridal style with natural venues, wildflowers, and outdoor elements"
   
   bridal_vintage:
     keywords: ["vintage lace", "antique details", "heirloom jewelry", "classic silhouette", "timeless elegance", "heritage style", "family tradition"]
@@ -381,8 +387,10 @@ aesthetics:
     description: "Garden wedding inspired bridal style perfect for outdoor ceremonies"
   
   bridal_romantic:
-    keywords: ["soft lace", "feminine details", "flowing train", "delicate embroidery", "rose motifs", "candlelit ceremony", "dreamy romance"]
-    description: "Ultra-romantic bridal style with soft feminine details and dreamy elements"
+    keywords: ["romantic white wedding dress", "lace wedding gown", "soft tulle bridal dress", "romantic garden venue", "soft pink roses", "candlelit wedding ceremony", "intimate chapel wedding", "romantic floral arrangements", "dreamy wedding venue"]
+    negative_keywords: ["colorful", "bright colors", "traditional costume", "indian wedding", "cultural dress", "modern architecture"]
+    color_palette: ["white", "ivory", "blush", "champagne", "cream", "soft pink"]
+    description: "Ultra-romantic Western bridal style with soft details, intimate venues, and dreamy elements"
   
   bridal_classic:
     keywords: ["timeless design", "traditional silhouette", "white gown", "church wedding", "elegant simplicity", "formal ceremony", "bridal tradition"]

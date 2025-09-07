@@ -75,18 +75,18 @@ class CLIPService:
     
     def _create_text_prompts(self, aesthetic_terms: List[str]) -> List[str]:
         """Create text prompts for zero-shot classification."""
-        # Different prompt templates for better results
+        # Lifestyle-focused templates to reduce formal/bridal bias
         templates = [
-            "a photo of {} fashion style",
-            "a picture of {} aesthetic", 
-            "an image with {} vibes",
-            "{} style clothing",
-            "a {} style outfit"
+            "a {} style outfit",
+            "someone wearing {} aesthetic clothing", 
+            "a picture with {} vibes",
+            "{} inspired clothing",
+            "a {} lifestyle outfit"
         ]
         
         prompts = []
         for term in aesthetic_terms:
-            # Use the first template by default, can experiment with others
+            # Use the first template - more casual and lifestyle-focused
             prompt = templates[0].format(term.replace('_', ' '))
             prompts.append(prompt)
         

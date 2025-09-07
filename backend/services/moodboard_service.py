@@ -78,21 +78,93 @@ class MoodboardService:
             )
     
     async def _classify_aesthetics(self, image_content: bytes) -> List[AestheticScore]:
-        """Classify image aesthetics using CLIP."""
+        """Classify image aesthetics using CLIP with confidence threshold."""
         try:
             # Get aesthetic vocabulary
             vocabulary = await aesthetic_service.get_vocabulary()
             
             # Use CLIP for zero-shot classification
-            scores = await clip_service.classify_aesthetics(image_content, vocabulary)
+            all_scores = await clip_service.classify_aesthetics(image_content, vocabulary)
             
             # Add descriptions from aesthetic service
-            for score in scores:
+            for score in all_scores:
                 description = await aesthetic_service.get_aesthetic_description(score.name)
                 score.description = description
             
-            # Return top 5 aesthetics
-            return scores[:5]
+            # Log detailed classification results
+            logger.info("=== CLIP Classification Results ===")
+            for i, score in enumerate(all_scores[:10]):  # Show top 10 to find cottagecore
+                logger.info(f"#{i+1}: {score.name} = {score.score:.3f} ({score.score*100:.1f}%)")
+            logger.info("===================================")
+
+            # Focus on the dominant (highest confidence) aesthetic
+            dominant_aesthetic = all_scores[0]
+            logger.info(f"Selected dominant aesthetic: {dominant_aesthetic.name} ({dominant_aesthetic.score:.3f})")
+            
+            # Apply intelligent threshold logic
+            MINIMUM_CONFIDENCE_THRESHOLD = 0.025  # 2.5% - lowered since lifestyle boost works effectively
+            logger.info(f"🏆 HIGHEST CONFIDENCE AESTHETIC: {dominant_aesthetic.name} at {dominant_aesthetic.score:.3f} ({dominant_aesthetic.score*100:.1f}%)")
+            
+            # Special logic: Prefer lifestyle aesthetics over bridal if they're close
+            lifestyle_aesthetics = ["cottagecore", "fairycore", "goblincore", "clean_girl", "soft_girl", "coquette", "vintage", "retro"]
+            for aesthetic in all_scores[:10]:  # Check top 10
+                if aesthetic.name in lifestyle_aesthetics and aesthetic.score >= 0.025:  # 2.5% minimum
+                    if aesthetic.score * 6.0 >= dominant_aesthetic.score:  # Give 600% boost to lifestyle aesthetics
+                        logger.info(f"🌸 LIFESTYLE BOOST: Promoting '{aesthetic.name}' ({aesthetic.score:.3f}) over '{dominant_aesthetic.name}' ({dominant_aesthetic.score:.3f})")
+                        dominant_aesthetic = aesthetic
+                        break
+            
+            # Non-bridal boost: If bridal aesthetic wins, check if non-bridal equivalent is in top 10
+            bridal_to_nonbridal = {
+                "bridal_minimalist": "minimalist",
+                "bridal_modern": "modern", 
+                "bridal_vintage": "vintage",
+                "bridal_classic": "classic",
+                "bridal_romantic": "romantic",
+                "bridal_artdeco": "art_deco"
+            }
+            
+            if dominant_aesthetic.name in bridal_to_nonbridal:
+                target_aesthetic = bridal_to_nonbridal[dominant_aesthetic.name]
+                for aesthetic in all_scores[:10]:  # Check top 10
+                    if aesthetic.name == target_aesthetic and aesthetic.score >= 0.03:  # 3% minimum
+                        boosted_score = aesthetic.score * 4.0  # 400% boost for non-bridal
+                        logger.info(f"🚫 NON-BRIDAL BOOST: '{aesthetic.name}' ({aesthetic.score:.3f} × 4 = {boosted_score:.3f}) vs '{dominant_aesthetic.name}' ({dominant_aesthetic.score:.3f})")
+                        if boosted_score >= dominant_aesthetic.score:
+                            logger.info(f"👔 PROMOTING: '{aesthetic.name}' over bridal variant '{dominant_aesthetic.name}'")
+                            dominant_aesthetic = aesthetic
+                            break
+            
+            # Preppy boost: CLIP under-ranks preppy/old_money, check if they're in top 20
+            preppy_aesthetics = ["preppy", "old_money", "quiet_luxury"]
+            confused_aesthetics = ["mod", "grunge", "maximalist", "streetwear"]  # Aesthetics that often win incorrectly over preppy
+            
+            if dominant_aesthetic.name in confused_aesthetics:
+                for aesthetic in all_scores[:20]:  # Check top 20 for preppy
+                    if aesthetic.name in preppy_aesthetics and aesthetic.score >= 0.01:  # 1% minimum
+                        boosted_score = aesthetic.score * 8.0  # 800% boost for preppy
+                        logger.info(f"🎩 PREPPY BOOST: '{aesthetic.name}' ({aesthetic.score:.3f} × 8 = {boosted_score:.3f}) vs '{dominant_aesthetic.name}' ({dominant_aesthetic.score:.3f})")
+                        if boosted_score >= dominant_aesthetic.score:
+                            logger.info(f"🏌️ PROMOTING: '{aesthetic.name}' over confused aesthetic '{dominant_aesthetic.name}'")
+                            dominant_aesthetic = aesthetic
+                            break
+            
+            if dominant_aesthetic.score < MINIMUM_CONFIDENCE_THRESHOLD:
+                logger.warning(f"❌ REJECTED: '{dominant_aesthetic.name}' confidence ({dominant_aesthetic.score:.3f}) below threshold ({MINIMUM_CONFIDENCE_THRESHOLD})")
+                logger.info("Falling back to generic 'minimalist' aesthetic for broad inspiration")
+                fallback_aesthetic = AestheticScore(name="minimalist", score=0.65, description="Clean, versatile style that works with many pieces")
+                return [fallback_aesthetic]
+            
+            logger.info(f"✅ ACCEPTED: '{dominant_aesthetic.name}' confidence ({dominant_aesthetic.score:.3f}) meets threshold ({MINIMUM_CONFIDENCE_THRESHOLD})")
+            
+            # Include dominant + up to 2 supporting aesthetics (if they meet a lower bar)
+            result_aesthetics = [dominant_aesthetic]
+            for aesthetic in all_scores[1:3]:  # Check next 2 aesthetics
+                if aesthetic.score >= 0.35:  # Lower threshold for supporting aesthetics
+                    result_aesthetics.append(aesthetic)
+                    logger.info(f"➕ SUPPORTING: '{aesthetic.name}' at {aesthetic.score:.3f}")
+            
+            return result_aesthetics
             
         except Exception as e:
             logger.error(f"Error in aesthetic classification: {str(e)}")

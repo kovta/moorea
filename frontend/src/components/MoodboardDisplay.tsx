@@ -1,161 +1,163 @@
-import React from 'react';
-import styled from 'styled-components';
-import { MoodboardResult, AestheticScore } from '../types';
+import React, { useState } from 'react';
+import { MoodboardResult } from '../types';
 
 interface MoodboardDisplayProps {
   result: MoodboardResult;
 }
 
-const Container = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-`;
-
-const AestheticsSection = styled.div`
-  margin-bottom: 32px;
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 16px;
-`;
-
-const AestheticsList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-`;
-
-const AestheticTag = styled.div<{ score: number }>`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px 16px;
-  background-color: ${props => `rgba(0, 123, 255, ${props.score})`};
-  color: ${props => props.score > 0.5 ? 'white' : '#333'};
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-`;
-
-const AestheticName = styled.div`
-  text-transform: capitalize;
-  margin-bottom: 4px;
-`;
-
-const AestheticScore = styled.div`
-  font-size: 12px;
-  opacity: 0.8;
-`;
-
-const ImagesGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-`;
-
-const ImageCard = styled.div`
-  position: relative;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  }
-`;
-
-const Image = styled.img`
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-`;
-
-const ImageOverlay = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
-  color: white;
-  padding: 16px;
-`;
-
-const Photographer = styled.div`
-  font-size: 12px;
-  opacity: 0.9;
-`;
-
-const SimilarityScore = styled.div`
-  font-size: 11px;
-  opacity: 0.7;
-  margin-top: 4px;
-`;
-
-const Stats = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  color: #666;
-  margin-top: 24px;
-  padding: 16px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-`;
-
 const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result }) => {
+  const [visibleImages, setVisibleImages] = useState(20); // Start with 20 images (4 rows of 5)
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Get the dominant aesthetic (highest scoring)
+  const dominantAesthetic = result.top_aesthetics[0];
+  
+  // Images to display (up to the visible limit)
+  const imagesToShow = result.images.slice(0, visibleImages);
+  const hasMoreImages = result.images.length > visibleImages;
+
+  const handleLoadMore = async () => {
+    setIsLoading(true);
+    // Simulate loading delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setVisibleImages(prev => Math.min(prev + 20, result.images.length));
+    setIsLoading(false);
+  };
+
   return (
-    <Container>
-      <AestheticsSection>
-        <SectionTitle>Detected Aesthetics</SectionTitle>
-        <AestheticsList>
-          {result.top_aesthetics.map((aesthetic: AestheticScore) => (
-            <AestheticTag key={aesthetic.name} score={aesthetic.score}>
-              <AestheticName>{aesthetic.name.replace('_', ' ')}</AestheticName>
-              <AestheticScore>{Math.round(aesthetic.score * 100)}%</AestheticScore>
-            </AestheticTag>
-          ))}
-        </AestheticsList>
-      </AestheticsSection>
-
-      <SectionTitle>Your Moodboard</SectionTitle>
-      <ImagesGrid>
-        {result.images.map((image) => (
-          <ImageCard key={image.id}>
-            <Image 
-              src={image.url} 
-              alt={`Moodboard image by ${image.photographer}`}
-              loading="lazy"
-            />
-            <ImageOverlay>
-              {image.photographer && (
-                <Photographer>Photo by {image.photographer}</Photographer>
-              )}
-              {image.similarity_score && (
-                <SimilarityScore>
-                  Similarity: {Math.round(image.similarity_score * 100)}%
-                </SimilarityScore>
-              )}
-            </ImageOverlay>
-          </ImageCard>
-        ))}
-      </ImagesGrid>
-
-      <Stats>
-        <div>
-          {result.images.length} images • Generated in{' '}
-          {result.processing_time ? `${result.processing_time.toFixed(1)}s` : 'N/A'}
+    <div className="w-full animate-fade-in">
+      {/* Dominant Aesthetic Header */}
+      {dominantAesthetic && (
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-100 to-pink-100 px-6 py-3 rounded-full mb-4">
+            <span className="text-2xl">✨</span>
+            <div>
+              <h2 className="text-lg font-semibold text-purple-800 capitalize">
+                {dominantAesthetic.name.replace('_', ' ')} Vibes
+              </h2>
+              <p className="text-sm text-purple-600">
+                {Math.round(dominantAesthetic.score * 100)}% match
+              </p>
+            </div>
+          </div>
+          
+          {dominantAesthetic.description && (
+            <p className="text-gray-600 max-w-2xl mx-auto text-sm">
+              {dominantAesthetic.description}
+            </p>
+          )}
         </div>
-        <div>Job ID: {result.job_id}</div>
-      </Stats>
-    </Container>
+      )}
+
+      {/* Moodboard Grid - Fixed 5 columns */}
+      <div className="moodboard-grid mb-8">
+        {imagesToShow.map((image, index) => (
+          <div 
+            key={image.id}
+            className="group relative aspect-square overflow-hidden rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer animate-fade-in"
+            style={{ animationDelay: `${index * 0.05}s` }}
+          >
+            {/* Main Image */}
+            <img 
+              src={image.url} 
+              alt={`Moodboard inspiration ${index + 1}`}
+              loading="lazy"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            
+            {/* Overlay that appears on hover */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute bottom-0 left-0 right-0 p-3">
+                {/* Photographer credit */}
+                {image.photographer && (
+                  <p className="text-white text-xs font-medium mb-1">
+                    📸 {image.photographer}
+                  </p>
+                )}
+                
+                {/* Similarity score */}
+                {image.similarity_score && (
+                  <div className="flex items-center gap-1">
+                    <div className="flex-1 bg-white/20 rounded-full h-1">
+                      <div 
+                        className="bg-white h-1 rounded-full transition-all duration-500"
+                        style={{ width: `${image.similarity_score * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-white text-xs">
+                      {Math.round(image.similarity_score * 100)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Corner indicator for high-match images */}
+            {image.similarity_score && image.similarity_score > 0.8 && (
+              <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs px-2 py-1 rounded-full font-medium shadow-md">
+                🔥 Hot match
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Load More Section */}
+      {hasMoreImages && (
+        <div className="text-center">
+          <button 
+            onClick={handleLoadMore}
+            disabled={isLoading}
+            className="btn-primary inline-flex items-center gap-3 px-8 py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Loading more magic...
+              </>
+            ) : (
+              <>
+                <span>✨</span>
+                Load More Inspiration
+                <span className="bg-white/20 px-2 py-1 rounded-full text-sm">
+                  +{Math.min(20, result.images.length - visibleImages)}
+                </span>
+              </>
+            )}
+          </button>
+          
+          <p className="text-gray-500 text-sm mt-3">
+            Showing {imagesToShow.length} of {result.images.length} images
+          </p>
+        </div>
+      )}
+
+      {/* Fun completion message when all images are shown */}
+      {!hasMoreImages && result.images.length > 20 && (
+        <div className="text-center py-8">
+          <div className="text-4xl mb-3">🎨</div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">
+            That's all the inspiration we've got!
+          </h3>
+          <p className="text-gray-600">
+            Hope you found some amazing style ideas for your piece ✨
+          </p>
+        </div>
+      )}
+
+      {/* Casual stats footer */}
+      <div className="mt-12 pt-6 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+        <div className="flex items-center gap-4">
+          <span>🎯 {result.images.length} curated images</span>
+          {result.processing_time && (
+            <span>⚡ Generated in {result.processing_time.toFixed(1)}s</span>
+          )}
+        </div>
+        <div className="text-xs opacity-75">
+          ID: {result.job_id.toString().slice(-8)}
+        </div>
+      </div>
+    </div>
   );
 };
 

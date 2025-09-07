@@ -15,9 +15,22 @@ from services.cache_service import cache_service
 from app.routes import moodboard, aesthetics
 
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging to both console and file
+import os
+log_file = os.path.join(os.path.dirname(__file__), "..", "moodboard_backend.log")
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # Console output
+        logging.FileHandler(log_file, mode='a')  # File output (append)
+    ]
+)
 logger = logging.getLogger(__name__)
+logger.info(f"🚀 Logging to file: {os.path.abspath(log_file)}")
+logger.info("=" * 80)
+logger.info("🌸 NEW BACKEND SESSION STARTED 🌸")
+logger.info("=" * 80)
 
 
 @asynccontextmanager
@@ -77,6 +90,19 @@ async def health_check():
         timestamp=datetime.now(),
         version=settings.app_version
     )
+
+
+@app.post("/debug/clear-logs")
+async def clear_logs():
+    """Clear the log file for testing - DEBUG ONLY."""
+    log_file = os.path.join(os.path.dirname(__file__), "..", "moodboard_backend.log")
+    try:
+        with open(log_file, 'w') as f:
+            f.write("")
+        logger.info("🧹 LOG FILE CLEARED FOR NEW TEST SESSION")
+        return {"status": "logs_cleared", "message": "Log file cleared for new test session"}
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to clear logs: {str(e)}"}
 
 
 if __name__ == "__main__":

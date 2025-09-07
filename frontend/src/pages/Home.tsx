@@ -1,76 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import React, { useState } from 'react';
 import ImageUpload from '../components/ImageUpload';
 import ProgressIndicator from '../components/ProgressIndicator';
 import MoodboardDisplay from '../components/MoodboardDisplay';
 import { uploadImage, getJobStatus, getMoodboardResult } from '../utils/api';
 import { JobStatus, MoodboardState } from '../types';
-
-const Container = styled.div`
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
-`;
-
-const Content = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-`;
-
-const Header = styled.div`
-  text-align: center;
-  color: white;
-  margin-bottom: 40px;
-`;
-
-const Title = styled.h1`
-  font-size: 48px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const Subtitle = styled.p`
-  font-size: 20px;
-  font-weight: 300;
-  opacity: 0.9;
-  max-width: 600px;
-  margin: 0 auto;
-`;
-
-const Card = styled.div`
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-  margin-bottom: 32px;
-`;
-
-const ErrorMessage = styled.div`
-  background-color: #fee;
-  border: 1px solid #fcc;
-  color: #c33;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-`;
-
-const NewSessionButton = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 24px;
-  transition: transform 0.2s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-  }
-`;
 
 const Home: React.FC = () => {
   const [moodboardState, setMoodboardState] = useState<MoodboardState>({
@@ -159,52 +92,136 @@ const Home: React.FC = () => {
   };
 
   return (
-    <Container>
-      <Content>
-        <Header>
-          <Title>Moodboard Generator</Title>
-          <Subtitle>
-            Upload a clothing image and discover the aesthetic. 
-            We'll create a personalized moodboard that captures the vibe.
-          </Subtitle>
-        </Header>
+    <div className="min-h-screen gradient-bg p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header - Only show on initial state */}
+        {moodboardState.status === JobStatus.PENDING && (
+          <div className="text-center mb-8 md:mb-12 animate-fade-in px-4">
+            <div className="mb-6">
+              <span className="text-5xl md:text-6xl mb-4 block animate-bounce-slow">✨</span>
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-white mb-4 drop-shadow-lg">
+                Hello! What do you need
+              </h1>
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-gradient mb-6 drop-shadow-lg">
+                inspo for today?
+              </h1>
+            </div>
+            <p className="text-lg md:text-xl lg:text-2xl text-white/90 font-light max-w-2xl mx-auto leading-relaxed px-4">
+              Drop your clothing pic and watch the magic happen ✨
+              <br className="hidden sm:block"/>
+              <span className="block sm:inline text-base md:text-lg text-white/70 mt-1 sm:mt-0">
+                We'll find your aesthetic & create the perfect moodboard
+              </span>
+            </p>
+          </div>
+        )}
 
-        <Card>
+        {/* Main Content Card */}
+        <div className="card max-w-4xl mx-auto animate-slide-up">
+          {/* Error Message */}
           {moodboardState.error && (
-            <ErrorMessage>{moodboardState.error}</ErrorMessage>
+            <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-lg animate-fade-in">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <span className="text-red-400 text-xl">⚠️</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-red-700 font-medium">{moodboardState.error}</p>
+                </div>
+              </div>
+            </div>
           )}
 
+          {/* Upload State */}
           {moodboardState.status === JobStatus.PENDING && (
-            <ImageUpload 
-              onFileSelect={handleFileSelect}
-              isUploading={false}
-            />
+            <div className="animate-fade-in">
+              <ImageUpload 
+                onFileSelect={handleFileSelect}
+                isUploading={false}
+              />
+              
+              {/* Fun helper text */}
+              <div className="mt-8 text-center">
+                <p className="text-gray-600 text-sm mb-3">
+                  💡 <strong>Pro tip:</strong> The clearer your photo, the better your moodboard!
+                </p>
+                <div className="flex flex-wrap justify-center gap-2 text-xs text-gray-500">
+                  <span className="bg-gray-100 px-3 py-1 rounded-full">Vintage tees</span>
+                  <span className="bg-gray-100 px-3 py-1 rounded-full">Elegant dresses</span>
+                  <span className="bg-gray-100 px-3 py-1 rounded-full">Street style</span>
+                  <span className="bg-gray-100 px-3 py-1 rounded-full">Cozy sweaters</span>
+                </div>
+              </div>
+            </div>
           )}
 
-          {(moodboardState.status === JobStatus.PROCESSING) && (
-            <ProgressIndicator 
-              status={moodboardState.status}
-              progress={moodboardState.progress}
-            />
+          {/* Processing State */}
+          {moodboardState.status === JobStatus.PROCESSING && (
+            <div className="animate-fade-in">
+              <ProgressIndicator 
+                status={moodboardState.status}
+                progress={moodboardState.progress}
+              />
+            </div>
           )}
 
+          {/* Results State */}
           {moodboardState.status === JobStatus.COMPLETED && moodboardState.result && (
-            <>
+            <div className="animate-fade-in">
+              {/* Success header */}
+              <div className="text-center mb-8">
+                <span className="text-4xl mb-2 block">🎉</span>
+                <h2 className="text-2xl font-display font-semibold text-gray-900 mb-2">
+                  Your moodboard is ready!
+                </h2>
+                <p className="text-gray-600">
+                  Scroll through your personalized style inspiration below
+                </p>
+              </div>
+
               <MoodboardDisplay result={moodboardState.result} />
-              <NewSessionButton onClick={handleNewSession}>
-                Create Another Moodboard
-              </NewSessionButton>
-            </>
+              
+              <div className="text-center mt-8">
+                <button 
+                  onClick={handleNewSession}
+                  className="btn-primary inline-flex items-center gap-2"
+                >
+                  <span>✨</span>
+                  Create Another Moodboard
+                </button>
+              </div>
+            </div>
           )}
 
+          {/* Failed State */}
           {moodboardState.status === JobStatus.FAILED && (
-            <NewSessionButton onClick={handleNewSession}>
-              Try Again
-            </NewSessionButton>
+            <div className="text-center py-12 animate-fade-in">
+              <span className="text-4xl mb-4 block">😞</span>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                Oops! Something went wrong
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Don't worry, let's try again with a different photo
+              </p>
+              <button 
+                onClick={handleNewSession}
+                className="btn-primary inline-flex items-center gap-2"
+              >
+                <span>🔄</span>
+                Try Again
+              </button>
+            </div>
           )}
-        </Card>
-      </Content>
-    </Container>
+        </div>
+
+        {/* Footer - Only show on completed state */}
+        {moodboardState.status === JobStatus.COMPLETED && (
+          <div className="text-center mt-12 text-white/70 text-sm animate-fade-in">
+            <p>Made with ✨ for fashion lovers • Share your moodboard with friends!</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
