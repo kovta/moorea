@@ -30,7 +30,7 @@ def _validate_image_file(file: UploadFile) -> None:
     if file.content_type not in allowed_types:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported file type: {file.content_type}. Allowed: {allowed_types}"
+            detail=f"Unsupported file type: {file.content_type}. Please use JPEG, PNG, or WebP format."
         )
     
     # Check file size (max 10MB)

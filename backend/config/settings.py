@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     pexels_api_key: Optional[str] = None
     flickr_api_key: Optional[str] = None
     
+    # Pinterest API
+    pinterest_client_id: Optional[str] = None
+    pinterest_client_secret: Optional[str] = None
+    pinterest_redirect_uri: str = "http://localhost:3000/auth/pinterest/callback"
+    
     # ML Model settings
     clip_model_name: str = "ViT-B/32"
     max_candidates: int = 50

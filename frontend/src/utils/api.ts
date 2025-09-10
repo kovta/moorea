@@ -1,7 +1,14 @@
 import axios from 'axios';
 import { MoodboardResponse, JobStatusResponse, MoodboardResult } from '../types';
 
-const API_BASE = '/api/v1';
+const API_BASE = process.env.REACT_APP_API_URL || '/api/v1';
+
+// Log the API base URL for debugging
+console.log('🔧 Environment check:', {
+  REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+  API_BASE: API_BASE,
+  NODE_ENV: process.env.NODE_ENV
+});
 
 const apiClient = axios.create({
   baseURL: API_BASE,
@@ -9,9 +16,14 @@ const apiClient = axios.create({
 });
 
 export const uploadImage = async (file: File): Promise<MoodboardResponse> => {
+  console.log('🔧 API Base URL:', API_BASE);
+  console.log('📁 File details:', { name: file.name, size: file.size, type: file.type });
+  
   const formData = new FormData();
   formData.append('file', file);
-
+  
+  console.log('🌐 Making POST request to:', `${API_BASE}/moodboard/generate`);
+  
   const response = await apiClient.post<MoodboardResponse>(
     '/moodboard/generate',
     formData,
@@ -22,6 +34,7 @@ export const uploadImage = async (file: File): Promise<MoodboardResponse> => {
     }
   );
 
+  console.log('📨 API Response:', response.status, response.data);
   return response.data;
 };
 

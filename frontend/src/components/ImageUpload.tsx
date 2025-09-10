@@ -9,9 +9,18 @@ interface ImageUploadProps {
 const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+    if (rejectedFiles.length > 0) {
+      // Handle rejected files
+      const rejectedFile = rejectedFiles[0];
+      console.error('❌ File rejected:', rejectedFile.file.name, rejectedFile.errors);
+      alert(`File "${rejectedFile.file.name}" is not supported. Please use JPEG, PNG, or WebP format.`);
+      return;
+    }
+    
     if (acceptedFiles.length > 0 && !isUploading) {
       const file = acceptedFiles[0];
+      console.log('✅ File accepted:', file.name, file.type);
       onFileSelect(file);
       
       // Create preview URL

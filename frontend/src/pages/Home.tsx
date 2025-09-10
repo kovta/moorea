@@ -12,10 +12,14 @@ const Home: React.FC = () => {
 
   const handleFileSelect = async (file: File) => {
     try {
+      console.log('🚀 Starting upload for file:', file.name, 'Size:', file.size);
       setMoodboardState({ status: JobStatus.PENDING });
       
       // Upload image
+      console.log('📤 Calling uploadImage API...');
       const response = await uploadImage(file);
+      console.log('✅ Upload successful:', response);
+      
       setMoodboardState({
         jobId: response.job_id,
         status: response.status as JobStatus
@@ -23,11 +27,22 @@ const Home: React.FC = () => {
 
       // Start polling for status
       pollJobStatus(response.job_id);
-    } catch (error) {
-      console.error('Upload failed:', error);
+    } catch (error: any) {
+      console.error('❌ Upload failed - Full error:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      
+      let errorMessage = 'Failed to upload image. Please try again.';
+      if (error.response) {
+        errorMessage = `Upload failed: ${error.response.status} - ${error.response.data?.detail || error.message}`;
+      } else if (error.message) {
+        errorMessage = `Upload failed: ${error.message}`;
+      }
+      
       setMoodboardState({
         status: JobStatus.FAILED,
-        error: 'Failed to upload image. Please try again.'
+        error: errorMessage
       });
     }
   };
