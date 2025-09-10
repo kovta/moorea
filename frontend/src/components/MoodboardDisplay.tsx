@@ -3,24 +3,41 @@ import { MoodboardResult } from '../types';
 
 interface MoodboardDisplayProps {
   result: MoodboardResult;
+  originalImage?: File | null;
 }
 
-const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result }) => {
+const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalImage }) => {
   const [visibleImages, setVisibleImages] = useState(20); // Start with 20 images (4 rows of 5)
   const [isLoading, setIsLoading] = useState(false);
   
   // Get the dominant aesthetic (highest scoring)
   const dominantAesthetic = result.top_aesthetics[0];
   
+  // Create images array with original image inserted at position 2 (third position)
+  const allImages = [...result.images];
+  if (originalImage) {
+    const originalImageObj = {
+      id: 'original-upload',
+      url: URL.createObjectURL(originalImage),
+      thumbnail_url: URL.createObjectURL(originalImage),
+      photographer: 'You',
+      source_api: 'original',
+      similarity_score: 1.0 // Perfect match since it's the original
+    };
+    
+    // Insert at position 2 (third image)
+    allImages.splice(2, 0, originalImageObj);
+  }
+  
   // Images to display (up to the visible limit)
-  const imagesToShow = result.images.slice(0, visibleImages);
-  const hasMoreImages = result.images.length > visibleImages;
+  const imagesToShow = allImages.slice(0, visibleImages);
+  const hasMoreImages = allImages.length > visibleImages;
 
   const handleLoadMore = async () => {
     setIsLoading(true);
     // Simulate loading delay for better UX
     await new Promise(resolve => setTimeout(resolve, 800));
-    setVisibleImages(prev => Math.min(prev + 20, result.images.length));
+    setVisibleImages(prev => Math.min(prev + 20, allImages.length));
     setIsLoading(false);
   };
 
@@ -120,20 +137,20 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result }) => {
                 <span>✨</span>
                 Load More Inspiration
                 <span className="bg-white/20 px-2 py-1 rounded-full text-sm">
-                  +{Math.min(20, result.images.length - visibleImages)}
+                  +{Math.min(20, allImages.length - visibleImages)}
                 </span>
               </>
             )}
           </button>
           
           <p className="text-gray-500 text-sm mt-3">
-            Showing {imagesToShow.length} of {result.images.length} images
+            Showing {imagesToShow.length} of {allImages.length} images
           </p>
         </div>
       )}
 
       {/* Fun completion message when all images are shown */}
-      {!hasMoreImages && result.images.length > 20 && (
+      {!hasMoreImages && allImages.length > 20 && (
         <div className="text-center py-8">
           <div className="text-4xl mb-3">🎨</div>
           <h3 className="text-xl font-semibold text-gray-800 mb-2">
@@ -148,7 +165,7 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result }) => {
       {/* Casual stats footer */}
       <div className="mt-12 pt-6 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
         <div className="flex items-center gap-4">
-          <span>🎯 {result.images.length} curated images</span>
+          <span>🎯 {allImages.length} curated images</span>
           {result.processing_time && (
             <span>⚡ Generated in {result.processing_time.toFixed(1)}s</span>
           )}

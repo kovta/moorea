@@ -9,10 +9,12 @@ const Home: React.FC = () => {
   const [moodboardState, setMoodboardState] = useState<MoodboardState>({
     status: JobStatus.PENDING
   });
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   const handleFileSelect = async (file: File) => {
     try {
       console.log('🚀 Starting upload for file:', file.name, 'Size:', file.size);
+      setUploadedFile(file); // Store the uploaded file
       setMoodboardState({ status: JobStatus.PENDING });
       
       // Upload image
@@ -104,6 +106,7 @@ const Home: React.FC = () => {
 
   const handleNewSession = () => {
     setMoodboardState({ status: JobStatus.PENDING });
+    setUploadedFile(null); // Clear the uploaded file for new session
   };
 
   return (
@@ -194,7 +197,7 @@ const Home: React.FC = () => {
                 </p>
               </div>
 
-              <MoodboardDisplay result={moodboardState.result} />
+              <MoodboardDisplay result={moodboardState.result} originalImage={uploadedFile} />
               
               <div className="text-center mt-8">
                 <button 
