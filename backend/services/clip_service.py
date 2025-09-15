@@ -30,7 +30,8 @@ class CLIPService:
     async def initialize(self):
         """Initialize CLIP model."""
         try:
-            logger.info(f"Loading CLIP model: {settings.clip_model_name}")
+            backend = (settings.clip_backend or "openai").lower()
+            logger.info(f"Loading CLIP backend: {backend} (model: {settings.clip_model_name if backend=='openai' else settings.fashion_clip_model_name})")
             
             # Determine device
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -38,7 +39,7 @@ class CLIPService:
             
             # Load model asynchronously in thread pool to avoid blocking
             await asyncio.get_event_loop().run_in_executor(
-                None, self._load_model
+                None, self._load_model, backend
             )
             
             logger.info("CLIP model loaded successfully")
@@ -48,11 +49,19 @@ class CLIPService:
             logger.error(f"Failed to load CLIP model: {str(e)}")
             raise
     
-    def _load_model(self):
+    def _load_model(self, backend: str = "openai"):
         """Load the CLIP model (blocking operation)."""
-        # Using OpenAI's CLIP implementation
-        self.model, self.processor = clip.load(settings.clip_model_name, device=self.device)
-        self.model.eval()  # Set to evaluation mode
+        if backend == "fashion":
+            # Load FashionCLIP via Hugging Face
+            model_name = settings.fashion_clip_model_name
+            self.model = CLIPModel.from_pretrained(model_name)
+            self.processor = CLIPProcessor.from_pretrained(model_name)
+            self.model.to(self.device)
+            self.model.eval()
+        else:
+            # Using OpenAI's CLIP implementation
+            self.model, self.processor = clip.load(settings.clip_model_name, device=self.device)
+            self.model.eval()  # Set to evaluation mode
     
     def _preprocess_image(self, image_content: bytes) -> torch.Tensor:
         """Preprocess image for CLIP."""
@@ -64,8 +73,13 @@ class CLIPService:
             if image.mode != 'RGB':
                 image = image.convert('RGB')
             
-            # Preprocess with CLIP processor
-            image_input = self.processor(image).unsqueeze(0).to(self.device)
+            # Preprocess with CLIP processor (HF vs openai)
+            backend = (settings.clip_backend or "openai").lower()
+            if backend == "fashion":
+                inputs = self.processor(images=image, return_tensors="pt")
+                image_input = inputs["pixel_values"].to(self.device)
+            else:
+                image_input = self.processor(image).unsqueeze(0).to(self.device)
             
             return image_input
             
@@ -138,12 +152,22 @@ class CLIPService:
         text_prompts = self._create_text_prompts(aesthetic_vocabulary)
         
         # Tokenize text
-        text_tokens = clip.tokenize(text_prompts).to(self.device)
+        backend = (settings.clip_backend or "openai").lower()
+        if backend == "fashion":
+            inputs = self.processor(text=text_prompts, return_tensors="pt", padding=True)
+            text_tokens = inputs["input_ids"].to(self.device)
+        else:
+            text_tokens = clip.tokenize(text_prompts).to(self.device)
         
         # Generate embeddings
         with torch.no_grad():
-            image_features = self.model.encode_image(image_input)
-            text_features = self.model.encode_text(text_tokens)
+            backend = (settings.clip_backend or "openai").lower()
+            if backend == "fashion":
+                image_features = self.model.get_image_features(pixel_values=image_input)
+                text_features = self.model.get_text_features(input_ids=text_tokens)
+            else:
+                image_features = self.model.encode_image(image_input)
+                text_features = self.model.encode_text(text_tokens)
             
             # Normalize features
             image_features /= image_features.norm(dim=-1, keepdim=True)

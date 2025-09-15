@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     
     # ML Model settings
     clip_model_name: str = "ViT-B/32"
+    clip_backend: str = "openai"  # "openai" | "fashion"
+    fashion_clip_model_name: str = "laion/fashion-clip"
     max_candidates: int = 50
     final_moodboard_size: int = 12
     
