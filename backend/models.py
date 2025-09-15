@@ -31,6 +31,9 @@ class ImageCandidate(BaseModel):
     photographer: Optional[str] = Field(None, description="Photographer name for attribution")
     source_api: str = Field(..., description="Source API (unsplash, pexels, flickr)")
     similarity_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="CLIP similarity score")
+    download_location: Optional[str] = Field(None, description="Unsplash download tracking URL")
+    # Optional category annotation to help enforce clothing/environment mix
+    category: Optional[str] = Field(None, description="Candidate category: 'clothing' or 'environment'")
 
 
 class MoodboardResponse(BaseModel):

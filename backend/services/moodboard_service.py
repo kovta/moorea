@@ -24,12 +24,12 @@ class MoodboardService:
     def __init__(self):
         pass
     
-    async def queue_generation(self, job_id: UUID, image_content: bytes) -> None:
+    async def queue_generation(self, job_id: UUID, image_content: bytes, env_images: int | None = None, target_vibe: str | None = None) -> None:
         """Queue moodboard generation job."""
         # For now, process immediately (add proper queue later)
-        asyncio.create_task(self._process_moodboard(job_id, image_content))
+        asyncio.create_task(self._process_moodboard(job_id, image_content, env_images=env_images, target_vibe=target_vibe))
     
-    async def _process_moodboard(self, job_id: UUID, image_content: bytes) -> None:
+    async def _process_moodboard(self, job_id: UUID, image_content: bytes, env_images: int | None = None, target_vibe: str | None = None) -> None:
         """Process moodboard generation pipeline."""
         try:
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=0)
@@ -38,22 +38,37 @@ class MoodboardService:
             logger.info(f"Starting aesthetic classification for job {job_id}")
             await asyncio.sleep(1)  # Simulate processing
             top_aesthetics = await self._classify_aesthetics(image_content)
+            if target_vibe:
+                top_aesthetics = await self._apply_vibe_bias(top_aesthetics, target_vibe)
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=25)
             
             # Step 2: Keyword expansion with intelligent filtering
             logger.info(f"Expanding keywords for job {job_id}")
             search_keywords, negative_keywords = await self._expand_keywords(top_aesthetics)
+            # Strengthen negatives based on vibe
+            if target_vibe:
+                vibe_negatives = self._vibe_negative_keywords(target_vibe)
+                negative_keywords = list(set(negative_keywords) | set(vibe_negatives))
+                # Remove negatives from keywords proactively
+                search_keywords = [k for k in search_keywords if not any(n in k.lower() for n in vibe_negatives)]
             logger.info(f"Generated {len(search_keywords)} search keywords, avoiding {len(negative_keywords)} negative terms")
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=50)
             
-            # Step 3: Fetch candidates (placeholder)
+            # Step 3: Fetch clothing-focused candidates
             logger.info(f"Fetching image candidates for job {job_id}")
             candidates = await self._fetch_candidates(search_keywords)
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=75)
             
-            # Step 4: Re-rank and select (placeholder)
+            # Step 4: Re-rank and select clothing images
             logger.info(f"Re-ranking candidates for job {job_id}")
-            final_images = await self._rerank_candidates(image_content, candidates)
+            clothing_ranked = await self._rerank_candidates(image_content, candidates)
+
+            # Optional: fetch a dedicated environment pool and merge a fixed count
+            final_images = clothing_ranked
+            if env_images is not None and env_images > 0:
+                logger.info(f"Env images requested: {env_images}")
+                env_pool = await self._fetch_environment_pool(top_aesthetics=top_aesthetics)
+                final_images = self._merge_with_environment(clothing_ranked, env_pool, env_images)
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=100)
             
             # Store result
@@ -204,6 +219,55 @@ class MoodboardService:
                 unique_keywords.append(keyword)
         
         return unique_keywords, list(negative_keywords)
+
+    async def _apply_vibe_bias(self, scores: List[AestheticScore], vibe: str) -> List[AestheticScore]:
+        """Boost/demote aesthetics based on a target vibe."""
+        if not scores:
+            return scores
+        vibe = (vibe or "").lower()
+        boosts: dict[str, float] = {}
+        demotes: dict[str, float] = {}
+
+        if vibe in ("nancy_meyers", "nancy-meyers", "nancy_meyers_aesthetic"):
+            boosts = {
+                "quiet_luxury": 2.0,
+                "old_money": 1.8,
+                "preppy": 1.6,
+                "minimalist": 1.5,
+                "coastal": 1.7,
+                "coastal_grandmother": 2.0,
+            }
+            demotes = {
+                "mob_wife": 0.4,
+                "grunge": 0.5,
+                "maximalist": 0.6,
+                "bridal_ballgown": 0.6,
+                "bridal_mermaid": 0.6,
+                "bridal_artdeco": 0.6,
+                "bridal_princess": 0.6,
+                "bridal_romantic": 0.7,
+            }
+
+        adjusted: List[AestheticScore] = []
+        for s in scores:
+            factor = 1.0
+            if s.name in boosts:
+                factor = boosts[s.name]
+            if s.name in demotes:
+                factor = demotes[s.name]
+            adjusted.append(AestheticScore(name=s.name, score=min(1.0, s.score * factor), description=s.description))
+
+        adjusted.sort(key=lambda x: x.score, reverse=True)
+        return adjusted[:3]
+
+    def _vibe_negative_keywords(self, vibe: str) -> List[str]:
+        vibe = (vibe or "").lower()
+        if vibe in ("nancy_meyers", "nancy-meyers", "nancy_meyers_aesthetic"):
+            return [
+                "sexy", "club", "bodycon", "neon", "gothic", "punk", "streetwear",
+                "maximalist", "leather jacket", "dark makeup", "fishnets"
+            ]
+        return []
     
     async def _fetch_candidates(self, keywords: List[str]) -> List[ImageCandidate]:
         """Fetch image candidates from all APIs."""
@@ -290,6 +354,153 @@ class MoodboardService:
             logger.error(f"Error in candidate re-ranking: {str(e)}")
             # Fallback: return first N candidates without scoring
             return candidates[:settings.final_moodboard_size]
+
+    async def _fetch_environment_pool(self, top_aesthetics: List[AestheticScore]) -> List[ImageCandidate]:
+        """Fetch a pool of environment images using Pexels only, tagged as environment.
+        This pool is independent of clothing similarity to guarantee availability.
+        """
+        # Default cross-aesthetic environment keywords (Nancy Meyers/clean interiors friendly)
+        base_env_keywords = [
+            "sunlit kitchen",
+            "cozy living room",
+            "neutral interior",
+            "garden party",
+            "coastal house",
+            "linen curtains",
+            "soft lighting"
+        ]
+
+        # Bias by detected aesthetics
+        aesthetic_names = [a.name for a in top_aesthetics]
+        if any(name in aesthetic_names for name in ["coastal", "coastal_grandmother", "old_money", "quiet_luxury", "preppy", "minimalist"]):
+            base_env_keywords.extend(["hampton style home", "light wood kitchen", "white marble kitchen"])
+
+        env_candidates: List[ImageCandidate] = []
+        per_keyword = 6
+        for keyword in base_env_keywords:
+            try:
+                results = await pexels_client.search_photos(keyword, per_page=per_keyword)
+                for c in results:
+                    c.category = "environment"
+                env_candidates.extend(results)
+            except Exception as e:
+                logger.error(f"Environment fetch failed for '{keyword}': {e}")
+
+        # De-duplicate by URL
+        seen = set()
+        unique_env: List[ImageCandidate] = []
+        for c in env_candidates:
+            if c.url not in seen:
+                seen.add(c.url)
+                unique_env.append(c)
+
+        logger.info(f"Environment pool size: {len(unique_env)}")
+        return unique_env
+
+    def _merge_with_environment(self, clothing_ranked: List[ImageCandidate], env_pool: List[ImageCandidate], env_count: int) -> List[ImageCandidate]:
+        """Merge a fixed number of environment images into the final set.
+        - Keep clothing order by similarity
+        - Take env_count from env_pool in order
+        - Do not drop below env_count if available
+        """
+        if env_count <= 0:
+            return clothing_ranked[:settings.final_moodboard_size]
+
+        total_needed = settings.final_moodboard_size
+        env_pick = env_pool[:env_count] if env_pool else []
+        remaining_slots = max(0, total_needed - len(env_pick))
+        clothing_pick = clothing_ranked[:remaining_slots]
+
+        # Interleave: start with up to 2 clothing, then alternate
+        result: List[ImageCandidate] = []
+        c_idx = 0
+        e_idx = 0
+
+        while c_idx < len(clothing_pick) and len(result) < 2:
+            result.append(clothing_pick[c_idx])
+            c_idx += 1
+
+        while len(result) < total_needed and (c_idx < len(clothing_pick) or e_idx < len(env_pick)):
+            if e_idx < len(env_pick):
+                result.append(env_pick[e_idx])
+                e_idx += 1
+            if len(result) >= total_needed:
+                break
+            if c_idx < len(clothing_pick):
+                result.append(clothing_pick[c_idx])
+                c_idx += 1
+
+        # Fill trailing
+        for tail in (clothing_pick[c_idx:], env_pick[e_idx:]):
+            for item in tail:
+                if len(result) >= total_needed:
+                    break
+                result.append(item)
+
+        logger.info(f"Merged environment images: {min(len(env_pick), env_count)} of requested {env_count}")
+        return result
+
+    def _apply_environment_mix(self, ranked: List[ImageCandidate], desired_env: int) -> List[ImageCandidate]:
+        """Ensure the final list contains up to desired_env environment images by heuristics.
+        If category is missing, infer via simple keyword heuristics in URL.
+        """
+        if not ranked:
+            return ranked
+        desired_env = max(0, min(desired_env, settings.final_moodboard_size))
+
+        clothing_keywords = [
+            "dress", "skirt", "shirt", "blouse", "pants", "jeans", "jacket", "coat",
+            "outfit", "sweater", "cardigan", "top", "tee", "heels", "boots", "sneakers"
+        ]
+        environment_keywords = [
+            "field", "forest", "cabin", "room", "interior", "architecture", "beach",
+            "ocean", "mountain", "garden", "flowers", "landscape", "venue", "wedding",
+            "city", "street", "library", "studio"
+        ]
+
+        def infer_category(c: ImageCandidate) -> str:
+            if c.category:
+                return c.category
+            url = (c.url or "").lower()
+            if any(k in url for k in clothing_keywords):
+                return "clothing"
+            if any(k in url for k in environment_keywords):
+                return "environment"
+            # Default to clothing so we only add environment when confident
+            return "clothing"
+
+        clothing: List[ImageCandidate] = []
+        environment: List[ImageCandidate] = []
+        for c in ranked:
+            (environment if infer_category(c) == "environment" else clothing).append(c)
+
+        # Start with best clothing, then interleave environment up to desired_env
+        result: List[ImageCandidate] = []
+        env_added = 0
+        c_idx = 0
+        e_idx = 0
+        total_needed = min(len(ranked), settings.final_moodboard_size)
+
+        while len(result) < total_needed and (c_idx < len(clothing) or e_idx < len(environment)):
+            # Always try to keep clothing majority; insert env until cap
+            if env_added < desired_env and e_idx < len(environment):
+                result.append(environment[e_idx])
+                env_added += 1
+                e_idx += 1
+                if len(result) >= total_needed:
+                    break
+            if c_idx < len(clothing):
+                result.append(clothing[c_idx])
+                c_idx += 1
+
+        # Fill remaining slots with whichever category has items left
+        for tail in (clothing[c_idx:], environment[e_idx:]):
+            for item in tail:
+                if len(result) >= total_needed:
+                    break
+                result.append(item)
+
+        return result
 
 
 # Global service instance
