@@ -26,12 +26,12 @@ class CLIPService:
         self.processor = None
         self.device = None
         self._model_loaded = False
+        self._text_embeddings_cache = {}  # Cache for pre-computed text embeddings
     
     async def initialize(self):
         """Initialize CLIP model."""
         try:
-            backend = (settings.clip_backend or "openai").lower()
-            logger.info(f"Loading CLIP backend: {backend} (model: {settings.clip_model_name if backend=='openai' else settings.fashion_clip_model_name})")
+            logger.info(f"Loading CLIP model: {settings.clip_model_name}")
             
             # Determine device
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -39,29 +39,53 @@ class CLIPService:
             
             # Load model asynchronously in thread pool to avoid blocking
             await asyncio.get_event_loop().run_in_executor(
-                None, self._load_model, backend
+                None, self._load_model
             )
             
             logger.info("CLIP model loaded successfully")
             self._model_loaded = True
             
+            # Pre-compute text embeddings for performance
+            await self._precompute_text_embeddings()
+            
         except Exception as e:
             logger.error(f"Failed to load CLIP model: {str(e)}")
             raise
     
-    def _load_model(self, backend: str = "openai"):
+    async def _precompute_text_embeddings(self):
+        """Pre-compute and cache text embeddings for all aesthetics."""
+        try:
+            from services.aesthetic_service import aesthetic_service
+            
+            # Get aesthetic vocabulary
+            vocabulary = await aesthetic_service.get_vocabulary()
+            logger.info(f"Pre-computing text embeddings for {len(vocabulary)} aesthetics...")
+            
+            # Create text prompts
+            text_prompts = self._create_text_prompts(vocabulary)
+            
+            # Tokenize and encode in one batch for efficiency
+            text_tokens = clip.tokenize(text_prompts).to(self.device)
+            
+            with torch.no_grad():
+                text_features = self.model.encode_text(text_tokens)
+                text_features /= text_features.norm(dim=-1, keepdim=True)
+            
+            # Cache embeddings by aesthetic name
+            for i, aesthetic in enumerate(vocabulary):
+                self._text_embeddings_cache[aesthetic] = text_features[i:i+1]
+            
+            logger.info(f"✅ Pre-computed {len(vocabulary)} text embeddings for faster classification")
+            
+        except Exception as e:
+            logger.warning(f"Failed to pre-compute text embeddings: {str(e)}")
+            # Continue without pre-computed embeddings (fallback to on-demand)
+    
+    def _load_model(self):
         """Load the CLIP model (blocking operation)."""
-        if backend == "fashion":
-            # Load FashionCLIP via Hugging Face
-            model_name = settings.fashion_clip_model_name
-            self.model = CLIPModel.from_pretrained(model_name)
-            self.processor = CLIPProcessor.from_pretrained(model_name)
-            self.model.to(self.device)
-            self.model.eval()
-        else:
-            # Using OpenAI's CLIP implementation
-            self.model, self.processor = clip.load(settings.clip_model_name, device=self.device)
-            self.model.eval()  # Set to evaluation mode
+        # Using OpenAI's CLIP implementation
+        self.model, self.processor = clip.load(settings.clip_model_name, device=self.device)
+        self.model.eval()  # Set to evaluation mode
     
     def _preprocess_image(self, image_content: bytes) -> torch.Tensor:
         """Preprocess image for CLIP."""
@@ -73,13 +97,8 @@ class CLIPService:
             if image.mode != 'RGB':
                 image = image.convert('RGB')
             
-            # Preprocess with CLIP processor (HF vs openai)
-            backend = (settings.clip_backend or "openai").lower()
-            if backend == "fashion":
-                inputs = self.processor(images=image, return_tensors="pt")
-                image_input = inputs["pixel_values"].to(self.device)
-            else:
-                image_input = self.processor(image).unsqueeze(0).to(self.device)
+            # Preprocess with CLIP processor
+            image_input = self.processor(image).unsqueeze(0).to(self.device)
             
             return image_input
             
@@ -144,36 +163,39 @@ class CLIPService:
             raise
     
     def _classify_sync(self, image_content: bytes, aesthetic_vocabulary: List[str]) -> List[AestheticScore]:
-        """Synchronous CLIP classification."""
+        """Synchronous CLIP classification using cached text embeddings."""
         # Preprocess image
         image_input = self._preprocess_image(image_content)
         
-        # Create text prompts
-        text_prompts = self._create_text_prompts(aesthetic_vocabulary)
-        
-        # Tokenize text
-        backend = (settings.clip_backend or "openai").lower()
-        if backend == "fashion":
-            inputs = self.processor(text=text_prompts, return_tensors="pt", padding=True)
-            text_tokens = inputs["input_ids"].to(self.device)
-        else:
-            text_tokens = clip.tokenize(text_prompts).to(self.device)
-        
-        # Generate embeddings
+        # Generate image embedding
         with torch.no_grad():
-            backend = (settings.clip_backend or "openai").lower()
-            if backend == "fashion":
-                image_features = self.model.get_image_features(pixel_values=image_input)
-                text_features = self.model.get_text_features(input_ids=text_tokens)
-            else:
-                image_features = self.model.encode_image(image_input)
-                text_features = self.model.encode_text(text_tokens)
-            
-            # Normalize features
+            image_features = self.model.encode_image(image_input)
             image_features /= image_features.norm(dim=-1, keepdim=True)
-            text_features /= text_features.norm(dim=-1, keepdim=True)
+        
+        # Use cached text embeddings if available, otherwise compute on-demand
+        if self._text_embeddings_cache:
+            # Fast path: use pre-computed embeddings
+            text_features_list = []
+            valid_aesthetics = []
             
-            # Calculate similarities
+            for aesthetic in aesthetic_vocabulary:
+                if aesthetic in self._text_embeddings_cache:
+                    text_features_list.append(self._text_embeddings_cache[aesthetic])
+                    valid_aesthetics.append(aesthetic)
+            
+            if text_features_list:
+                # Stack cached embeddings
+                text_features = torch.cat(text_features_list, dim=0)
+                aesthetic_vocabulary = valid_aesthetics
+            else:
+                # Fallback to on-demand computation
+                text_features = self._compute_text_features_on_demand(aesthetic_vocabulary)
+        else:
+            # Fallback: compute text embeddings on-demand
+            text_features = self._compute_text_features_on_demand(aesthetic_vocabulary)
+        
+        # Calculate similarities
+        with torch.no_grad():
             similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)
             
         # Convert to AestheticScore objects
@@ -188,8 +210,19 @@ class CLIPService:
         # Sort by score descending
         scores.sort(key=lambda x: x.score, reverse=True)
         
-        logger.info(f"Classified aesthetics - Top 3: {[(s.name, f'{s.score:.3f}') for s in scores[:3]]}")
+        logger.info(f"⚡ Fast classification - Top 3: {[(s.name, f'{s.score:.3f}') for s in scores[:3]]}")
         return scores
+    
+    def _compute_text_features_on_demand(self, aesthetic_vocabulary: List[str]) -> torch.Tensor:
+        """Compute text features on-demand (fallback when cache is not available)."""
+        text_prompts = self._create_text_prompts(aesthetic_vocabulary)
+        text_tokens = clip.tokenize(text_prompts).to(self.device)
+        
+        with torch.no_grad():
+            text_features = self.model.encode_text(text_tokens)
+            text_features /= text_features.norm(dim=-1, keepdim=True)
+        
+        return text_features
     
     async def calculate_image_similarity(self, 
                                        image1_content: bytes, 

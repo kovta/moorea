@@ -17,7 +17,7 @@ class PexelsClient:
         self.api_key = api_key or settings.pexels_api_key
         self.base_url = "https://api.pexels.com/v1"
         self.session = httpx.AsyncClient(
-            timeout=30.0,
+            timeout=5.0,  # Reduced from 30s to 5s for faster response
             headers={
                 "Authorization": self.api_key if self.api_key else ""
             }

@@ -18,7 +18,7 @@ class UnsplashClient:
         self.access_key = access_key or settings.unsplash_access_key
         self.base_url = "https://api.unsplash.com"
         self.session = httpx.AsyncClient(
-            timeout=30.0,
+            timeout=5.0,  # Reduced from 30s to 5s for faster response
             headers={
                 "Authorization": f"Client-ID {self.access_key}" if self.access_key else ""
             }
@@ -54,13 +54,15 @@ class UnsplashClient:
             for photo in photos:
                 urls = photo.get('urls', {})
                 user = photo.get('user', {})
+                links = photo.get('links', {})
                 
                 candidate = ImageCandidate(
                     id=f"unsplash_{photo['id']}",
                     url=urls.get('regular', urls.get('small', '')),
                     thumbnail_url=urls.get('thumb', urls.get('small', '')),
                     photographer=user.get('name', 'Unknown'),
-                    source_api="unsplash"
+                    source_api="unsplash",
+                    download_location=links.get('download_location')
                 )
                 candidates.append(candidate)
             
@@ -81,6 +83,39 @@ class UnsplashClient:
         except Exception as e:
             logger.error(f"Unsplash API error for query '{query}': {str(e)}")
             return []
+    
+    async def trigger_download_event(self, download_location: str) -> bool:
+        """Trigger download event for Unsplash tracking compliance."""
+        if not self.access_key or not download_location:
+            return False
+        
+        try:
+            response = await self.session.get(download_location)
+            response.raise_for_status()
+            logger.info(f"Unsplash download event triggered successfully: {download_location}")
+            return True
+            
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Unsplash download tracking HTTP error: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unsplash download tracking error: {str(e)}")
+            return False
+    
+    async def trigger_download_events(self, images: List[ImageCandidate]) -> int:
+        """Trigger download events for multiple Unsplash images."""
+        success_count = 0
+        
+        for image in images:
+            if image.source_api == "unsplash" and image.download_location:
+                success = await self.trigger_download_event(image.download_location)
+                if success:
+                    success_count += 1
+        
+        if success_count > 0:
+            logger.info(f"Successfully triggered {success_count} Unsplash download events")
+        
+        return success_count
     
     async def close(self):
         """Close the HTTP session."""

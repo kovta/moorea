@@ -7,7 +7,7 @@ interface MoodboardDisplayProps {
 }
 
 const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalImage }) => {
-  const [visibleImages, setVisibleImages] = useState(20); // Start with 20 images (4 rows of 5)
+  const [visibleImages, setVisibleImages] = useState(12); // Start with 12 images (3 rows of 4)
   const [isLoading, setIsLoading] = useState(false);
   
   // Get the dominant aesthetic (highest scoring)
@@ -37,7 +37,7 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
     setIsLoading(true);
     // Simulate loading delay for better UX
     await new Promise(resolve => setTimeout(resolve, 800));
-    setVisibleImages(prev => Math.min(prev + 20, allImages.length));
+    setVisibleImages(prev => Math.min(prev + 30, allImages.length));
     setIsLoading(false);
   };
 
@@ -137,7 +137,7 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
                 <span>✨</span>
                 Load More Inspiration
                 <span className="bg-white/20 px-2 py-1 rounded-full text-sm">
-                  +{Math.min(20, allImages.length - visibleImages)}
+                  +{Math.min(30, allImages.length - visibleImages)}
                 </span>
               </>
             )}
@@ -150,7 +150,7 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
       )}
 
       {/* Fun completion message when all images are shown */}
-      {!hasMoreImages && allImages.length > 20 && (
+      {!hasMoreImages && allImages.length > 12 && (
         <div className="text-center py-8">
           <div className="text-4xl mb-3">🎨</div>
           <h3 className="text-xl font-semibold text-gray-800 mb-2">

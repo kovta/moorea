@@ -39,12 +39,11 @@ class Settings(BaseSettings):
     pinterest_client_secret: Optional[str] = None
     pinterest_redirect_uri: str = "http://localhost:3000/auth/pinterest/callback"
     
-    # ML Model settings
-    clip_model_name: str = "ViT-B/32"
-    clip_backend: str = "openai"  # "openai" | "fashion"
-    fashion_clip_model_name: str = "laion/fashion-clip"
-    max_candidates: int = 50
-    final_moodboard_size: int = 12
+    # ML Model settings - Optimized for speed with more images
+    clip_model_name: str = "RN50"  # Faster ResNet-50 model vs ViT-B/32
+    clip_backend: str = "fashion"
+    max_candidates: int = 30  # Increased to ensure enough candidates for selection
+    final_moodboard_size: int = 15  # Increased for 3 rows (5×3 grid layout)
     
     # File paths
     project_root: Path = Path(__file__).parent.parent.parent
