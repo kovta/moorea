@@ -313,6 +313,10 @@ aesthetics:
     keywords: ["understated elegance", "quality fabrics", "minimal branding", "timeless design", "sophisticated style", "stealth wealth"]
     description: "Understated luxury without obvious logos or branding"
   
+  the_row:
+    keywords: ["olsen twins fashion", "the row clothing", "minimalist luxury", "rich fabric textures", "architectural silhouettes", "sophisticated minimalism", "luxury basics", "understated elegance", "quality craftsmanship", "modern luxury", "clean lines", "neutral palette", "premium materials", "effortless sophistication", "contemporary luxury"]
+    description: "The Row's minimalist luxury aesthetic with rich fabrics and architectural silhouettes"
+  
   maximalist_luxury:
     keywords: ["designer logos", "bold patterns", "statement jewelry", "luxury brands", "opulent style", "excessive glamour"]
     description: "Bold luxury fashion with obvious designer branding and excess"

@@ -107,7 +107,7 @@ class MoodboardService:
             
             # ⚡ STREAMLINED BOOST LOGIC - Single pass for speed
             lifestyle_aesthetics = {"cottagecore", "fairycore", "goblincore", "clean_girl", "soft_girl", "coquette", "vintage", "retro"}
-            preppy_aesthetics = {"preppy", "old_money", "quiet_luxury"}
+            preppy_aesthetics = {"preppy", "old_money", "quiet_luxury", "the_row"}
             confused_aesthetics = {"mod", "grunge", "maximalist", "streetwear"}
             dramatic_bridal_aesthetics = {"bridal_ballgown", "bridal_princess", "bridal_mermaid", "bridal_romantic", "bridal_artdeco"}
             
@@ -282,8 +282,8 @@ class MoodboardService:
             # Sort by similarity score (highest first)
             scored_candidates.sort(key=lambda x: x.similarity_score or 0, reverse=True)
             
-            # Filter by minimum similarity threshold (60%)
-            MIN_SIMILARITY_THRESHOLD = 0.60
+            # Filter by minimum similarity threshold (40% - lowered for more images)
+            MIN_SIMILARITY_THRESHOLD = 0.40
             filtered_candidates = [
                 candidate for candidate in scored_candidates 
                 if (candidate.similarity_score or 0) >= MIN_SIMILARITY_THRESHOLD
@@ -296,11 +296,11 @@ class MoodboardService:
                 final_count = min(len(filtered_candidates), settings.final_moodboard_size)
                 return filtered_candidates[:final_count]
             else:
-                # Fallback: if too few high-quality matches, lower threshold to 50%
-                logger.warning(f"Only {len(filtered_candidates)} high-quality matches, using 50% threshold")
+                # Fallback: if too few high-quality matches, lower threshold to 30%
+                logger.warning(f"Only {len(filtered_candidates)} high-quality matches, using 30% threshold")
                 fallback_candidates = [
                     candidate for candidate in scored_candidates 
-                    if (candidate.similarity_score or 0) >= 0.50
+                    if (candidate.similarity_score or 0) >= 0.30
                 ]
                 final_count = min(len(fallback_candidates), settings.final_moodboard_size)
                 return fallback_candidates[:final_count]

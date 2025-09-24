@@ -7,7 +7,7 @@ interface MoodboardDisplayProps {
 }
 
 const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalImage }) => {
-  const [visibleImages, setVisibleImages] = useState(12); // Start with 12 images (3 rows of 4)
+  const [visibleImages, setVisibleImages] = useState(15); // Start with 15 images (3 rows of 5)
   const [isLoading, setIsLoading] = useState(false);
   
   // Get the dominant aesthetic (highest scoring)

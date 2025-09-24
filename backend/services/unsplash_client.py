@@ -40,8 +40,8 @@ class UnsplashClient:
                 'query': query,
                 'per_page': min(per_page, 30),  # Unsplash max is 30
                 'order_by': 'relevant',
-                'content_filter': 'high',
-                'orientation': 'all'
+                'content_filter': 'high'
+                # Removed 'orientation': 'all' as it's not a valid Unsplash parameter
             }
             
             response = await self.session.get(f"{self.base_url}/search/photos", params=params)
