@@ -59,3 +59,49 @@ export interface MoodboardState {
   result?: MoodboardResult;
   error?: string;
 }
+
+// Authentication Types
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
+export interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+export interface RegisterCredentials {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+}
+
+export interface SavedMoodboard {
+  id: number;
+  title: string;
+  description?: string;
+  aesthetic: string;
+  images: Array<{
+    url: string;
+    source: string;
+  }>;
+  user_id: number;
+  created_at: string;
+  updated_at: string;
+}

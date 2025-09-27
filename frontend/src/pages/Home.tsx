@@ -2,14 +2,20 @@ import React, { useState } from 'react';
 import ImageUpload from '../components/ImageUpload';
 import ProgressIndicator from '../components/ProgressIndicator';
 import MoodboardDisplay from '../components/MoodboardDisplay';
+import AuthModal from '../components/AuthModal';
+import UserMenu from '../components/UserMenu';
+import SaveMoodboard from '../components/SaveMoodboard';
 import { uploadImage, getJobStatus, getMoodboardResult } from '../utils/api';
 import { JobStatus, MoodboardState } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 const Home: React.FC = () => {
   const [moodboardState, setMoodboardState] = useState<MoodboardState>({
     status: JobStatus.PENDING
   });
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
 
   const handleFileSelect = async (file: File) => {
     try {
@@ -112,22 +118,39 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen gradient-bg p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
+        {/* Authentication Header */}
+        {!isLoading && (
+          <div className="flex justify-end items-center mb-6">
+            <div className="text-white">
+              {isAuthenticated ? (
+                <UserMenu />
+              ) : (
+                    <button
+                      onClick={() => setIsAuthModalOpen(true)}
+                      className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-gray-800 hover:bg-white/30 transition-colors font-medium"
+                    >
+                      Sign In / Sign Up
+                    </button>
+              )}
+            </div>
+          </div>
+        )}
         {/* Header - Only show on initial state */}
         {moodboardState.status === JobStatus.PENDING && (
           <div className="text-center mb-8 md:mb-12 animate-fade-in px-4">
-            <div className="mb-6">
-              <span className="text-5xl md:text-6xl mb-4 block animate-bounce-slow">✨</span>
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-white mb-4 drop-shadow-lg">
-                Hello! What do you need
-              </h1>
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-gradient mb-6 drop-shadow-lg">
-                inspo for today?
-              </h1>
-            </div>
-            <p className="text-lg md:text-xl lg:text-2xl text-white/90 font-light max-w-2xl mx-auto leading-relaxed px-4">
+                 <div className="mb-6">
+                   <span className="text-5xl md:text-6xl mb-4 block animate-bounce-slow">✨</span>
+                   <h1 className="text-4xl sm:text-5xl md:text-7xl font-display font-bold text-white mb-2 drop-shadow-lg">
+                     Moorea
+                   </h1>
+                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-semibold text-white mb-6 drop-shadow-lg">
+                     Hello, inspire me today!
+                   </h2>
+                 </div>
+            <p className="text-lg md:text-xl lg:text-2xl text-white font-medium max-w-2xl mx-auto leading-relaxed px-4">
               Drop your clothing pic and watch the magic happen ✨
               <br className="hidden sm:block"/>
-              <span className="block sm:inline text-base md:text-lg text-white/70 mt-1 sm:mt-0">
+              <span className="block sm:inline text-base md:text-lg text-white mt-1 sm:mt-0">
                 We'll find your aesthetic & create the perfect moodboard
               </span>
             </p>
@@ -199,7 +222,15 @@ const Home: React.FC = () => {
 
               <MoodboardDisplay result={moodboardState.result} originalImage={uploadedFile} />
               
-              <div className="text-center mt-8">
+              <div className="text-center mt-8 space-y-4">
+                     {isAuthenticated && (
+                       <SaveMoodboard 
+                         result={moodboardState.result} 
+                         originalImage={uploadedFile}
+                         onSave={() => {}}
+                       />
+                     )}
+                
                 <button 
                   onClick={handleNewSession}
                   className="btn-primary inline-flex items-center gap-2"
@@ -239,6 +270,12 @@ const Home: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Authentication Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
     </div>
   );
 };

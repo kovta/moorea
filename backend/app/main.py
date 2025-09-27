@@ -12,7 +12,8 @@ from models import HealthResponse
 from services.aesthetic_service import aesthetic_service
 from services.clip_service import clip_service
 from services.cache_service import cache_service
-from app.routes import moodboard, aesthetics
+from app.routes import moodboard, aesthetics, auth, moodboard_save
+from database import create_tables
 
 
 # Configure logging
@@ -24,6 +25,10 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan management."""
     logger.info("Starting up Moodboard Generator API...")
+    
+    # Initialize database
+    create_tables()
+    logger.info("Database tables created")
     
     # Initialize services
     await cache_service.initialize()
@@ -57,6 +62,8 @@ app.add_middleware(
 # Include routers
 app.include_router(moodboard.router, prefix="/api/v1", tags=["moodboard"])
 app.include_router(aesthetics.router, prefix="/api/v1", tags=["aesthetics"])
+app.include_router(auth.router, tags=["authentication"])
+app.include_router(moodboard_save.router, tags=["moodboard-save"])
 
 
 @app.get("/", response_model=HealthResponse)

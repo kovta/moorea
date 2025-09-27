@@ -67,7 +67,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) 
         ) : isUploading ? (
           <div className="text-6xl animate-pulse">⏳</div>
         ) : (
-          <div className="text-6xl animate-float">👕</div>
+          <div className="text-6xl animate-float">👔</div>
         )}
       </div>
 
@@ -92,9 +92,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) 
             Our AI is detecting the aesthetic and curating your moodboard
           </p>
           <div className="mt-4 flex justify-center items-center gap-1">
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+            <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#FFE99A', animationDelay: '0s' }}></div>
+            <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#FFD586', animationDelay: '0.1s' }}></div>
+            <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#FFAAAA', animationDelay: '0.2s' }}></div>
           </div>
         </div>
       ) : isDragActive ? (
@@ -125,7 +125,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) 
             disabled={isUploading}
             className="btn-primary inline-flex items-center gap-2 text-base px-8 py-3"
           >
-            <span>📱</span>
             Choose from Gallery
           </button>
 

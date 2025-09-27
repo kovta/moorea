@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # Database
     database_url: Optional[str] = None
     
+    # Security
+    secret_key: str = "your-secret-key-change-in-production"
+    
     # Redis
     redis_url: str = "redis://localhost:6379"
     

@@ -18,3 +18,4 @@ curl -s http://localhost:8000/health
 
 echo -e "\n✅ Backend restarted! Now test your bridal dress upload."
 echo "Expected: bridal_ballgown or bridal_princess at 60%+ confidence (12% × 5 boost)"
+

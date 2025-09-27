@@ -129,11 +129,11 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ status, progress 
 
       {/* Fun loading dots */}
       <div className="flex gap-2">
-        <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce"></div>
-        <div className="w-3 h-3 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-        <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-        <div className="w-3 h-3 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
-        <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+        <div className="w-3 h-3 rounded-full animate-bounce" style={{ backgroundColor: '#FFE99A', animationDelay: '0s' }}></div>
+        <div className="w-3 h-3 rounded-full animate-bounce" style={{ backgroundColor: '#FFD586', animationDelay: '0.1s' }}></div>
+        <div className="w-3 h-3 rounded-full animate-bounce" style={{ backgroundColor: '#FFAAAA', animationDelay: '0.2s' }}></div>
+        <div className="w-3 h-3 rounded-full animate-bounce" style={{ backgroundColor: '#FF9898', animationDelay: '0.3s' }}></div>
+        <div className="w-3 h-3 rounded-full animate-bounce" style={{ backgroundColor: '#FFE99A', animationDelay: '0.4s' }}></div>
       </div>
 
       {/* Encouraging message */}

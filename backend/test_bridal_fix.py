@@ -41,8 +41,8 @@ async def test_bridal_classification():
         image_data = f.read()
     
     # Run CLIP classification
-    aesthetics = aesthetic_service.get_all_aesthetics()
-    scores = await clip_service.classify_aesthetic(image_data, aesthetics)
+    aesthetics = await aesthetic_service.get_all_aesthetics()
+    scores = await clip_service.classify_aesthetics(image_data, aesthetics)
     
     # Sort by score
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)

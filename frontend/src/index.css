@@ -17,7 +17,8 @@
 /* Custom component styles */
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0;
+    background: linear-gradient(135deg, #FFACAC 0%, #FFBFA9 50%, #FFEBB4 100%);
+    @apply text-gray-800 px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0;
   }
 
   .btn-secondary {
@@ -29,7 +30,7 @@
   }
 
   .gradient-bg {
-    @apply bg-gradient-to-br from-purple-400 via-pink-400 to-indigo-500;
+    background: linear-gradient(135deg, #FFACAC 0%, #FFBFA9 25%, #FFEBB4 75%, #FBFFB1 100%);
   }
 
   .moodboard-grid {
@@ -40,7 +41,8 @@
 /* Custom utility styles */
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent;
+    background: linear-gradient(135deg, #FFACAC 0%, #FFBFA9 50%, #FFEBB4 100%);
+    @apply bg-clip-text text-transparent;
   }
 
   .animate-float {

@@ -1,5 +1,14 @@
 import axios from 'axios';
-import { MoodboardResponse, JobStatusResponse, MoodboardResult } from '../types';
+import { 
+  MoodboardResponse, 
+  JobStatusResponse, 
+  MoodboardResult, 
+  User, 
+  LoginCredentials, 
+  RegisterCredentials, 
+  AuthResponse, 
+  SavedMoodboard 
+} from '../types';
 
 const API_BASE = process.env.REACT_APP_API_URL || '/api/v1';
 
@@ -54,5 +63,57 @@ export const getMoodboardResult = async (jobId: string): Promise<MoodboardResult
 
 export const getAesthetics = async () => {
   const response = await apiClient.get('/aesthetics');
+  return response.data;
+};
+
+// Authentication API functions
+export const registerUser = async (credentials: RegisterCredentials): Promise<User> => {
+  const response = await apiClient.post<User>('/auth/register', credentials);
+  return response.data;
+};
+
+export const loginUser = async (credentials: LoginCredentials): Promise<AuthResponse> => {
+  const formData = new FormData();
+  formData.append('username', credentials.username);
+  formData.append('password', credentials.password);
+  
+  const response = await apiClient.post<AuthResponse>('/auth/login', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+  return response.data;
+};
+
+export const getCurrentUser = async (token: string): Promise<User> => {
+  const response = await apiClient.get<User>('/auth/me', {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+// Moodboard saving API functions
+export const saveMoodboard = async (moodboard: {
+  title: string;
+  description?: string;
+  aesthetic: string;
+  images: Array<{ url: string; source: string }>;
+}, token: string): Promise<SavedMoodboard> => {
+  const response = await apiClient.post<SavedMoodboard>('/moodboards/', moodboard, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+export const getUserMoodboards = async (token: string): Promise<SavedMoodboard[]> => {
+  const response = await apiClient.get<SavedMoodboard[]>('/moodboards/', {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
