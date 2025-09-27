@@ -16,15 +16,19 @@
 - **Frontend**: React with TypeScript for responsive user interface
 - **AI/ML**: Hugging Face CLIP model (RN50) for image classification and similarity matching
 - **Caching**: Redis for performance optimization and rate limit management
+- **Database**: PostgreSQL for user authentication and moodboard storage
+- **Authentication**: JWT-based user authentication with secure password hashing
 - **APIs**: Unsplash API (primary), Pexels API (secondary) for content sourcing
 
 ### Data Processing Pipeline
 1. **Image Upload**: User uploads clothing image via drag-and-drop interface
-2. **AI Classification**: CLIP model analyzes image against comprehensive aesthetic vocabulary (90+ terms)
+2. **AI Classification**: CLIP model analyzes image against comprehensive aesthetic vocabulary (91+ terms)
 3. **Keyword Expansion**: Top aesthetics mapped to relevant search terms via curated configuration
 4. **Content Fetching**: Parallel API calls to gather candidate images (30+ per moodboard)
 5. **Visual Re-ranking**: CLIP similarity scoring ensures visual cohesion with original upload
 6. **Moodboard Assembly**: Final selection of 15 images arranged in responsive grid layout
+7. **User Authentication**: Optional user accounts for saving and managing moodboards
+8. **Moodboard Storage**: Saved moodboards stored with original image in center position
 
 ### Performance Metrics
 - **Processing Time**: Sub-5 second moodboard generation
@@ -48,8 +52,10 @@
 
 ### Data Security & Privacy
 - **Image Processing**: Uploaded images processed in-memory, not permanently stored
+- **User Authentication**: Secure JWT-based authentication with SHA256 password hashing
+- **Moodboard Storage**: User moodboards stored with original image URLs for personal collections
 - **Caching Strategy**: Only aesthetic classification results cached (no personal images)
-- **User Privacy**: No personal data collection beyond anonymous usage analytics
+- **User Privacy**: Optional account creation for moodboard saving functionality
 - **GDPR Compliance**: Data processing limited to service functionality only
 
 ## Pinterest API Integration Business Case
@@ -75,11 +81,12 @@ We seek Pinterest API access to **use Pinterest's vast image collection as a con
 ## Content Quality & Curation Standards
 
 ### Aesthetic Vocabulary
-Our platform maintains a professionally curated vocabulary of **90+ fashion aesthetics** including:
-- **Classic Styles**: Minimalist, Vintage, Preppy, Old Money
-- **Contemporary Trends**: Y2K, Cottagecore, Dark Academia, Tenniscore
-- **Bridal Categories**: Ballgown, Mermaid, Boho, Minimalist, Princess styles
+Our platform maintains a professionally curated vocabulary of **91+ fashion aesthetics** including:
+- **Classic Styles**: Minimalist, Vintage, Preppy, Old Money, Quiet Luxury
+- **Contemporary Trends**: Y2K, Cottagecore, Dark Academia, Tenniscore, Balletcore
+- **Bridal Categories**: Ballgown, Mermaid, Boho, Minimalist, Princess, Romantic styles
 - **Lifestyle Aesthetics**: Gorpcore, Streetwear, Coastal, Academic variations
+- **Luxury Brands**: The Row aesthetic for minimalist luxury with rich fabrics
 
 ### Content Curation Process
 - **Keyword Mapping**: Each aesthetic mapped to 5-8 relevant search terms for content discovery
@@ -90,8 +97,9 @@ Our platform maintains a professionally curated vocabulary of **90+ fashion aest
 ## Business Model & Compliance
 
 ### Revenue Model
-- **Freemium Service**: Free moodboard generation with Pinterest save functionality
-- **Future Premium Features**: Advanced aesthetic categories, higher resolution exports
+- **Freemium Service**: Free moodboard generation with user account creation and moodboard saving
+- **User Accounts**: Optional authentication for personalized moodboard collections
+- **Future Premium Features**: Advanced aesthetic categories, higher resolution exports, Pinterest integration
 - **API Partnership**: Revenue sharing with content providers where applicable
 
 ### Terms of Service Compliance
@@ -102,6 +110,8 @@ Our platform maintains a professionally curated vocabulary of **90+ fashion aest
 ### Privacy Policy Highlights
 - **Minimal Data Collection**: Only aesthetic preferences and usage patterns anonymized
 - **No Image Storage**: User uploads processed temporarily for moodboard generation only
+- **User Accounts**: Optional account creation for moodboard saving with secure authentication
+- **Moodboard Storage**: Saved moodboards include original image URLs for personal collections
 - **Third-Party Integration**: Pinterest API integration clearly disclosed in privacy policy
 - **Content Respect**: Pinterest content used respectfully with full attribution and within moodboard context only
 
@@ -109,8 +119,10 @@ Our platform maintains a professionally curated vocabulary of **90+ fashion aest
 
 ### Current Status: Production Ready Beta
 - **Backend**: FastAPI server optimized for sub-5 second response times
-- **Frontend**: React application with responsive design and drag-and-drop upload
+- **Frontend**: React application with responsive design, drag-and-drop upload, and custom color scheme
 - **AI Pipeline**: CLIP model with pre-computed embeddings for optimal performance
+- **Authentication**: JWT-based user authentication with PostgreSQL database
+- **Moodboard Storage**: User accounts with saved moodboard collections and original image preservation
 - **API Integration**: Fully functional Unsplash and Pexels integration with rate limiting
 
 ### Pinterest Integration Implementation Plan
@@ -124,7 +136,8 @@ Our platform maintains a professionally curated vocabulary of **90+ fashion aest
 ### System Requirements
 - **Server**: Python 3.8+, FastAPI, Redis caching layer
 - **ML Models**: Hugging Face Transformers, PyTorch for CLIP inference
-- **Database**: PostgreSQL for user preferences (if implementing accounts)
+- **Database**: PostgreSQL for user authentication and moodboard storage
+- **Authentication**: JWT tokens with SHA256 password hashing
 - **Deployment**: Docker containerization ready for cloud deployment
 
 ### API Rate Management
@@ -137,7 +150,7 @@ Our platform maintains a professionally curated vocabulary of **90+ fashion aest
 
 **Technical Lead**: Development Team  
 **Application Domain**: [Your domain when deployed]  
-**GitHub Repository**: https://github.com/[your-username]/moorea  
+**GitHub Repository**: https://github.com/kovta/moorea  
 **Application Type**: Web Application (React + FastAPI)  
 **Integration Timeline**: 30 days post-approval for full Pinterest functionality
 
@@ -150,6 +163,9 @@ Our platform maintains a professionally curated vocabulary of **90+ fashion aest
 - **Cottagecore**: Vintage florals, rustic settings, pastoral lifestyle
 - **Dark Academia**: Scholarly aesthetics, tweed, gothic architecture
 - **Preppy**: Ivy League fashion, country club style, timeless elegance
-- **Bridal Collections**: Ballgown, Mermaid, Boho, Princess, Minimalist wedding styles
+- **Bridal Collections**: Ballgown, Mermaid, Boho, Princess, Romantic wedding styles
+- **The Row**: Minimalist luxury with rich fabrics and architectural silhouettes
+- **Balletcore**: Graceful poses, leotards, ballet flats, hair bows
+- **Quiet Luxury**: Understated elegance, quality fabrics, timeless design
 
 This application represents a unique intersection of AI technology and creative expression, providing users with professionally curated aesthetic inspiration while respecting content creator rights and platform policies.
