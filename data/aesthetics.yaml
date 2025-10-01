@@ -94,9 +94,8 @@ aesthetics:
 
   # Outdoor and Nature Aesthetics
   gorpcore:
-    keywords: ["hiking gear", "puffer jacket", "mountain landscape", "technical outdoor wear", "camping equipment"]
-    description: "Outdoor utility fashion and nature connection"
-  
+    keywords: ["hiking wear", "technical apparel", "outdoor gear", "waterproof materials", "durable fabrics", "cargo pants", "utility pockets", "fleece jacket", "hiking boots", "trail mix", "functional clothing", "rugged wear", "practical fashion", "earthy colors", "streetwear blend", "urban hiking", "comfort utility"]
+    description: "Functional rugged outdoor gear blended with streetwear for everyday urban use"  
   cabincore:
     keywords: ["cozy cabin", "buffalo plaid", "flannel shirt", "hiking boots", "campfire"]
     description: "Cozy outdoor living with rustic comfort"

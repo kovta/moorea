@@ -16,10 +16,12 @@ async def get_aesthetics():
     """Get available aesthetic categories."""
     try:
         aesthetics_data = await aesthetic_service.get_all_aesthetics()
+        vocabulary = await aesthetic_service.get_vocabulary()
         
         return AestheticsListResponse(
-            aesthetics=aesthetics_data,
-            total_count=len(aesthetics_data)
+            aesthetics=vocabulary,  # Return list of aesthetic names
+            total_count=len(vocabulary),
+            version="1.0.0"
         )
         
     except Exception as e:

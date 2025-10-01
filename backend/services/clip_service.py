@@ -61,8 +61,8 @@ class CLIPService:
             vocabulary = await aesthetic_service.get_vocabulary()
             logger.info(f"Pre-computing text embeddings for {len(vocabulary)} aesthetics...")
             
-            # Create text prompts
-            text_prompts = self._create_text_prompts(vocabulary)
+            # Create text prompts using actual keywords
+            text_prompts = await self._create_text_prompts(vocabulary)
             
             # Tokenize and encode in one batch for efficiency
             text_tokens = clip.tokenize(text_prompts).to(self.device)
@@ -106,21 +106,32 @@ class CLIPService:
             logger.error(f"Error preprocessing image: {str(e)}")
             raise
     
-    def _create_text_prompts(self, aesthetic_terms: List[str]) -> List[str]:
-        """Create text prompts for zero-shot classification."""
-        # Lifestyle-focused templates to reduce formal/bridal bias
-        templates = [
-            "a {} style outfit",
-            "someone wearing {} aesthetic clothing", 
-            "a picture with {} vibes",
-            "{} inspired clothing",
-            "a {} lifestyle outfit"
-        ]
+    async def _create_text_prompts(self, aesthetic_terms: List[str]) -> List[str]:
+        """Create text prompts for zero-shot classification using actual keywords."""
+        from services.aesthetic_service import aesthetic_service
         
         prompts = []
         for term in aesthetic_terms:
-            # Use the first template - more casual and lifestyle-focused
-            prompt = templates[0].format(term.replace('_', ' '))
+            # Get keywords for this aesthetic
+            keywords = await aesthetic_service.get_keywords_for_aesthetic(term)
+            
+            if keywords:
+                # Use the first few keywords to create a rich prompt
+                keyword_text = ", ".join(keywords[:5])  # Use first 5 keywords
+                prompt = f"{term.replace('_', ' ')} aesthetic with {keyword_text}"
+                
+                # Debug logging for gorpcore
+                if term == "gorpcore":
+                    logger.info(f"🎯 GORPCORE PROMPT: '{prompt}'")
+                    logger.info(f"🎯 GORPCORE KEYWORDS: {keywords}")
+            else:
+                # Fallback to simple template if no keywords
+                prompt = f"a {term.replace('_', ' ')} style outfit"
+                
+                # Debug logging for gorpcore
+                if term == "gorpcore":
+                    logger.warning(f"❌ GORPCORE NO KEYWORDS: '{prompt}'")
+            
             prompts.append(prompt)
         
         return prompts

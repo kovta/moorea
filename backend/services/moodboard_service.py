@@ -93,8 +93,39 @@ class MoodboardService:
             
             # Log detailed classification results
             logger.info("=== CLIP Classification Results ===")
-            for i, score in enumerate(all_scores[:10]):  # Show top 10 to find cottagecore
+            for i, score in enumerate(all_scores[:20]):  # Show top 20 to catch more specific aesthetics
                 logger.info(f"#{i+1}: {score.name} = {score.score:.3f} ({score.score*100:.1f}%)")
+            
+            # Check specifically for mob_wife and dark_academia even if not in top 20
+            mob_wife_score = next((score for score in all_scores if score.name == "mob_wife"), None)
+            if mob_wife_score:
+                logger.info(f"🔍 MOB_WIFE FOUND: #{all_scores.index(mob_wife_score)+1} = {mob_wife_score.score:.3f} ({mob_wife_score.score*100:.1f}%)")
+            else:
+                logger.info("❌ MOB_WIFE NOT FOUND in classification results")
+            
+            dark_academia_score = next((score for score in all_scores if score.name == "dark_academia"), None)
+            if dark_academia_score:
+                logger.info(f"🔍 DARK_ACADEMIA FOUND: #{all_scores.index(dark_academia_score)+1} = {dark_academia_score.score:.3f} ({dark_academia_score.score*100:.1f}%)")
+            else:
+                logger.info("❌ DARK_ACADEMIA NOT FOUND in classification results")
+            
+            light_academia_score = next((score for score in all_scores if score.name == "light_academia"), None)
+            if light_academia_score:
+                logger.info(f"🔍 LIGHT_ACADEMIA FOUND: #{all_scores.index(light_academia_score)+1} = {light_academia_score.score:.3f} ({light_academia_score.score*100:.1f}%)")
+            else:
+                logger.info("❌ LIGHT_ACADEMIA NOT FOUND in classification results")
+            
+            maximalist_score = next((score for score in all_scores if score.name == "maximalist"), None)
+            if maximalist_score:
+                logger.info(f"🔍 MAXIMALIST FOUND: #{all_scores.index(maximalist_score)+1} = {maximalist_score.score:.3f} ({maximalist_score.score*100:.1f}%)")
+            else:
+                logger.info("❌ MAXIMALIST NOT FOUND in classification results")
+            
+            gorpcore_score = next((score for score in all_scores if score.name == "gorpcore"), None)
+            if gorpcore_score:
+                logger.info(f"🔍 GORPCORE FOUND: #{all_scores.index(gorpcore_score)+1} = {gorpcore_score.score:.3f} ({gorpcore_score.score*100:.1f}%)")
+            else:
+                logger.info("❌ GORPCORE NOT FOUND in classification results")
             logger.info("===================================")
 
             # Focus on the dominant (highest confidence) aesthetic
@@ -102,63 +133,96 @@ class MoodboardService:
             logger.info(f"Selected dominant aesthetic: {dominant_aesthetic.name} ({dominant_aesthetic.score:.3f})")
             
             # Apply intelligent threshold logic
-            MINIMUM_CONFIDENCE_THRESHOLD = 0.025  # 2.5% - lowered since lifestyle boost works effectively
+            MINIMUM_CONFIDENCE_THRESHOLD = 0.01  # 1% - lowered to catch more specific aesthetics like mob_wife
             logger.info(f"🏆 HIGHEST CONFIDENCE AESTHETIC: {dominant_aesthetic.name} at {dominant_aesthetic.score:.3f} ({dominant_aesthetic.score*100:.1f}%)")
             
-            # ⚡ STREAMLINED BOOST LOGIC - Single pass for speed
-            lifestyle_aesthetics = {"cottagecore", "fairycore", "goblincore", "clean_girl", "soft_girl", "coquette", "vintage", "retro"}
+            # ⚡ SYSTEMATIC CONFIDENCE-BASED BOOST LOGIC
+            # Define aesthetic categories for targeted boosting
+            lifestyle_aesthetics = {"cottagecore", "fairycore", "goblincore", "clean_girl", "soft_girl", "coquette", "vintage", "retro", "coastal_grandmother", "gorpcore"}
             preppy_aesthetics = {"preppy", "old_money", "quiet_luxury", "the_row"}
-            confused_aesthetics = {"mod", "grunge", "maximalist", "streetwear"}
+            luxury_aesthetics = {"mob_wife", "office_siren", "barbiecore", "maximalist_luxury", "quiet_luxury"}
+            academic_aesthetics = {"dark_academia", "light_academia", "romantic_academia"}
             dramatic_bridal_aesthetics = {"bridal_ballgown", "bridal_princess", "bridal_mermaid", "bridal_romantic", "bridal_artdeco"}
             
             best_aesthetic = dominant_aesthetic
             best_score = dominant_aesthetic.score
             
-            # Single efficient pass through top 10 (max 20 for preppy)
-            for i, aesthetic in enumerate(all_scores[:10]):
-                # Lifestyle boost (6x)
-                if aesthetic.name in lifestyle_aesthetics and aesthetic.score >= 0.025:
-                    boosted = aesthetic.score * 6.0
-                    if boosted > best_score:
-                        logger.info(f"⚡ LIFESTYLE: {aesthetic.name} ({aesthetic.score:.3f} × 6 = {boosted:.3f})")
-                        best_aesthetic, best_score = aesthetic, boosted
+            def calculate_boost(score: float, category: str) -> float:
+                """Calculate boost multiplier based on confidence level and category."""
+                if score >= 0.15:  # Very high confidence - no boost needed
+                    return 1.0
+                elif score >= 0.08:  # High confidence - tiny boost
+                    return 1.2
+                elif score >= 0.05:  # Medium-high confidence - small boost
+                    return 1.5
+                elif score >= 0.02:  # Medium confidence - moderate boost
+                    return 2.5
+                elif score >= 0.01:  # Low confidence - high boost
+                    return 4.0
+                elif score >= 0.005:  # Very low confidence - very high boost
+                    return 8.0
+                else:  # Extremely low confidence - maximum boost
+                    return 15.0
+            
+            # Apply systematic boosts to ALL aesthetics (not just top 20)
+            logger.info(f"🔍 Checking {len(all_scores)} aesthetics for boosts...")
+            for aesthetic in all_scores:
+                boost_multiplier = 1.0
+                category = "general"
                 
-                # Dramatic bridal boost (5x) - promote ballgown/princess over minimalist
-                elif aesthetic.name in dramatic_bridal_aesthetics and aesthetic.score >= 0.02:
-                    boosted = aesthetic.score * 5.0
-                    if boosted > best_score:
-                        logger.info(f"⚡ DRAMATIC BRIDAL: {aesthetic.name} ({aesthetic.score:.3f} × 5 = {boosted:.3f})")
-                        best_aesthetic, best_score = aesthetic, boosted
+                # Determine category and boost
+                if aesthetic.name in lifestyle_aesthetics:
+                    # Lifestyle aesthetics get extra boost for competitiveness
+                    base_boost = calculate_boost(aesthetic.score, "lifestyle")
+                    boost_multiplier = base_boost * 3.0  # Extra 200% boost for lifestyle
+                    category = "lifestyle"
+                    if aesthetic.name == "gorpcore":
+                        logger.info(f"🎯 GORPCORE BOOST CALCULATION: {aesthetic.score:.3f} × {boost_multiplier:.1f} = {aesthetic.score * boost_multiplier:.3f}")
+                elif aesthetic.name in preppy_aesthetics:
+                    boost_multiplier = calculate_boost(aesthetic.score, "preppy")
+                    category = "preppy"
+                elif aesthetic.name in luxury_aesthetics:
+                    boost_multiplier = calculate_boost(aesthetic.score, "luxury")
+                    category = "luxury"
+                elif aesthetic.name in academic_aesthetics:
+                    boost_multiplier = calculate_boost(aesthetic.score, "academic")
+                    category = "academic"
+                elif aesthetic.name in dramatic_bridal_aesthetics:
+                    boost_multiplier = calculate_boost(aesthetic.score, "bridal")
+                    category = "bridal"
+                elif aesthetic.name == "maximalist":
+                    boost_multiplier = calculate_boost(aesthetic.score, "maximalist")
+                    category = "maximalist"
+                elif aesthetic.name == "gorpcore":
+                    # Special massive boost for gorpcore to compete with high-confidence aesthetics
+                    boost_multiplier = 50.0  # 50x boost to beat techwear
+                    category = "gorpcore"
                 
-                # Non-bridal boost (4x) - only if current dominant is bridal_minimalist specifically
-                # Don't demote dramatic bridal styles like ballgown/princess
-                elif (dominant_aesthetic.name == "bridal_minimalist" and 
-                      aesthetic.name == "minimalist" and 
-                      aesthetic.score >= 0.03):
-                    boosted = aesthetic.score * 4.0
+                # Apply boost if it improves the score
+                if boost_multiplier > 1.0:
+                    boosted = aesthetic.score * boost_multiplier
                     if boosted > best_score:
-                        logger.info(f"⚡ NON-BRIDAL: {aesthetic.name} ({aesthetic.score:.3f} × 4 = {boosted:.3f})")
+                        logger.info(f"⚡ {category.upper()}: {aesthetic.name} ({aesthetic.score:.3f} × {boost_multiplier} = {boosted:.3f})")
                         best_aesthetic, best_score = aesthetic, boosted
             
-            # Quick preppy check only if needed (top 20)
-            if dominant_aesthetic.name in confused_aesthetics:
-                for aesthetic in all_scores[10:20]:  # Check remaining in top 20
-                    if aesthetic.name in preppy_aesthetics and aesthetic.score >= 0.01:
-                        boosted = aesthetic.score * 8.0
-                        if boosted > best_score:
-                            logger.info(f"⚡ PREPPY: {aesthetic.name} ({aesthetic.score:.3f} × 8 = {boosted:.3f})")
-                            best_aesthetic = aesthetic
-                            break
+            # All aesthetics are now checked above, no need for special checks
             
             dominant_aesthetic = best_aesthetic
             
-            if dominant_aesthetic.score < MINIMUM_CONFIDENCE_THRESHOLD:
-                logger.warning(f"❌ REJECTED: '{dominant_aesthetic.name}' confidence ({dominant_aesthetic.score:.3f}) below threshold ({MINIMUM_CONFIDENCE_THRESHOLD})")
+            # Update the aesthetic score to reflect the boosted confidence
+            # Cap at 1.0 to prevent >100% display in frontend
+            capped_score = min(best_score, 1.0)
+            dominant_aesthetic.score = capped_score
+            
+            # Use boosted score for threshold check, not original score
+            effective_score = best_score  # This is the boosted score
+            if effective_score < MINIMUM_CONFIDENCE_THRESHOLD:
+                logger.warning(f"❌ REJECTED: '{dominant_aesthetic.name}' effective confidence ({effective_score:.3f}) below threshold ({MINIMUM_CONFIDENCE_THRESHOLD})")
                 logger.info("Falling back to generic 'minimalist' aesthetic for broad inspiration")
                 fallback_aesthetic = AestheticScore(name="minimalist", score=0.65, description="Clean, versatile style that works with many pieces")
                 return [fallback_aesthetic]
             
-            logger.info(f"✅ ACCEPTED: '{dominant_aesthetic.name}' confidence ({dominant_aesthetic.score:.3f}) meets threshold ({MINIMUM_CONFIDENCE_THRESHOLD})")
+            logger.info(f"✅ ACCEPTED: '{dominant_aesthetic.name}' effective confidence ({effective_score:.3f}) meets threshold ({MINIMUM_CONFIDENCE_THRESHOLD})")
             
             # Include dominant + up to 2 supporting aesthetics (if they meet a lower bar)
             result_aesthetics = [dominant_aesthetic]
