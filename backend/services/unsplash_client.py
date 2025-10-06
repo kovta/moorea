@@ -62,6 +62,7 @@ class UnsplashClient:
                     thumbnail_url=urls.get('thumb', urls.get('small', '')),
                     photographer=user.get('name', 'Unknown'),
                     source_api="unsplash",
+                    source_url=links.get('html', f"https://unsplash.com/photos/{photo['id']}"),
                     download_location=links.get('download_location')
                 )
                 candidates.append(candidate)

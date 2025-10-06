@@ -6,8 +6,7 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from database import User
 import os
-import hashlib
-import secrets
+import bcrypt
 
 # Security settings
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
@@ -15,21 +14,20 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash."""
-    # Extract salt and hash from stored password
+    """Verify a password against its bcrypt hash."""
     try:
-        salt, hash_part = hashed_password.split('$')
-        # Hash the plain password with the same salt
-        test_hash = hashlib.sha256((plain_password + salt).encode()).hexdigest()
-        return test_hash == hash_part
-    except:
+        return bcrypt.checkpw(
+            plain_password.encode('utf-8'), 
+            hashed_password.encode('utf-8')
+        )
+    except Exception:
         return False
 
 def get_password_hash(password: str) -> str:
-    """Hash a password using SHA256 with salt."""
-    salt = secrets.token_hex(16)
-    hash_value = hashlib.sha256((password + salt).encode()).hexdigest()
-    return f"{salt}${hash_value}"
+    """Hash a password using bcrypt."""
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """Create a JWT access token."""

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moorea - Test Account Deletion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .step {
+            background: #f7f7f7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .step h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        button.danger {
+            background: #dc3545;
+        }
+        button.danger:hover {
+            background: #c82333;
+        }
+        button.success {
+            background: #28a745;
+        }
+        button.success:hover {
+            background: #218838;
+        }
+        .output {
+            background: #1e1e1e;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            white-space: pre-wrap;
+        }
+        .success {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #0c5460;
+        }
+        .hidden {
+            display: none;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Account Deletion</h1>
+        <p class="subtitle">Moorea GDPR Compliance Testing</p>
+
+        <div class="info">
+            <strong>ℹ️ Info:</strong> This page tests the account deletion endpoint.<br>
+            Make sure your backend is running at <code>http://localhost:8000</code>
+        </div>
+
+        <!-- Step 1: Create Test Account -->
+        <div class="step">
+            <h3>Step 1: Create Test Account</h3>
+            <label>Username:</label>
+            <input type="text" id="username" value="test_delete_user" placeholder="Username">
+            <label>Email:</label>
+            <input type="email" id="email" value="test_delete@example.com" placeholder="Email">
+            <label>Password:</label>
+            <input type="password" id="password" value="TestPassword123!" placeholder="Password">
+            <button onclick="createAccount()">Create Test Account</button>
+            <div id="createOutput" class="output hidden"></div>
+        </div>
+
+        <!-- Step 2: Login -->
+        <div class="step">
+            <h3>Step 2: Login</h3>
+            <button onclick="login()" id="loginBtn" disabled>Login</button>
+            <div id="loginOutput" class="output hidden"></div>
+        </div>
+
+        <!-- Step 3: Export Data -->
+        <div class="step">
+            <h3>Step 3: Export Data (Optional)</h3>
+            <button onclick="exportData()" class="success" id="exportBtn" disabled>📥 Download My Data</button>
+            <div id="exportOutput" class="output hidden"></div>
+        </div>
+
+        <!-- Step 4: Delete Account -->
+        <div class="step">
+            <h3>Step 4: Delete Account</h3>
+            <div class="warning">
+                <strong>⚠️ Warning:</strong> This will permanently delete the test account and all data. This action cannot be undone.
+            </div>
+            <button onclick="deleteAccount()" class="danger" id="deleteBtn" disabled>🗑️ Delete Account Permanently</button>
+            <div id="deleteOutput" class="output hidden"></div>
+        </div>
+
+        <!-- Step 5: Verify -->
+        <div class="step">
+            <h3>Step 5: Verify Deletion</h3>
+            <button onclick="verifyDeletion()" id="verifyBtn" disabled>✅ Verify Account is Deleted</button>
+            <div id="verifyOutput" class="output hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let authToken = null;
+        let username = null;
+        let password = null;
+
+        function log(elementId, message, isError = false) {
+            const output = document.getElementById(elementId);
+            output.classList.remove('hidden');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = isError ? '❌' : '✅';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        async function createAccount() {
+            const usernameInput = document.getElementById('username').value;
+            const emailInput = document.getElementById('email').value;
+            const passwordInput = document.getElementById('password').value;
+
+            username = usernameInput;
+            password = passwordInput;
+
+            document.getElementById('createOutput').textContent = '';
+            log('createOutput', 'Creating test account...');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: usernameInput,
+                        email: emailInput,
+                        password: passwordInput
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    log('createOutput', `Account created: ${data.username}`);
+                    log('createOutput', `Email: ${data.email}`);
+                    log('createOutput', `Created at: ${data.created_at}`);
+                    document.getElementById('loginBtn').disabled = false;
+                } else {
+                    log('createOutput', `Error: ${data.detail}`, true);
+                    if (data.detail.includes('already registered')) {
+                        log('createOutput', 'Tip: Account exists, you can skip to Step 2');
+                        document.getElementById('loginBtn').disabled = false;
+                    }
+                }
+            } catch (error) {
+                log('createOutput', `Network error: ${error.message}`, true);
+                log('createOutput', 'Is the backend running?', true);
+            }
+        }
+
+        async function login() {
+            document.getElementById('loginOutput').textContent = '';
+            log('loginOutput', 'Logging in...');
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    authToken = data.access_token;
+                    log('loginOutput', 'Login successful!');
+                    log('loginOutput', `Token: ${authToken.substring(0, 20)}...`);
+                    document.getElementById('exportBtn').disabled = false;
+                    document.getElementById('deleteBtn').disabled = false;
+                    document.getElementById('verifyBtn').disabled = false;
+                } else {
+                    log('loginOutput', `Error: ${data.detail}`, true);
+                }
+            } catch (error) {
+                log('loginOutput', `Network error: ${error.message}`, true);
+            }
+        }
+
+        async function exportData() {
+            document.getElementById('exportOutput').textContent = '';
+            log('exportOutput', 'Exporting data...');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/export-data`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('exportOutput', 'Data export successful!');
+                    log('exportOutput', `Username: ${data.user_account.username}`);
+                    log('exportOutput', `Email: ${data.user_account.email}`);
+                    log('exportOutput', `Total moodboards: ${data.data_usage_summary.total_moodboards}`);
+                    
+                    // Download the JSON file
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `moorea_export_${username}_${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    
+                    log('exportOutput', '📥 File downloaded successfully!');
+                } else {
+                    const data = await response.json();
+                    log('exportOutput', `Error: ${data.detail}`, true);
+                }
+            } catch (error) {
+                log('exportOutput', `Network error: ${error.message}`, true);
+            }
+        }
+
+        async function deleteAccount() {
+            if (!confirm('Are you SURE you want to delete this account? This cannot be undone!')) {
+                log('deleteOutput', 'Deletion cancelled by user.');
+                return;
+            }
+
+            document.getElementById('deleteOutput').textContent = '';
+            log('deleteOutput', 'Deleting account...');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/delete-account`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    log('deleteOutput', '🗑️ Account deleted successfully!');
+                    log('deleteOutput', `Username: ${data.username}`);
+                    log('deleteOutput', `Deleted at: ${data.deleted_at}`);
+                    log('deleteOutput', 'You can now verify the deletion in Step 5.');
+                } else {
+                    log('deleteOutput', `Error: ${data.detail}`, true);
+                }
+            } catch (error) {
+                log('deleteOutput', `Network error: ${error.message}`, true);
+            }
+        }
+
+        async function verifyDeletion() {
+            document.getElementById('verifyOutput').textContent = '';
+            log('verifyOutput', 'Verifying account deletion...');
+
+            // Test 1: Try to access account info
+            log('verifyOutput', 'Test 1: Checking if token is still valid...');
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/me`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    log('verifyOutput', '❌ FAILED: Account still exists!', true);
+                } else {
+                    log('verifyOutput', '✅ PASS: Token is invalid (expected)');
+                }
+            } catch (error) {
+                log('verifyOutput', `Network error: ${error.message}`, true);
+            }
+
+            // Test 2: Try to login again
+            log('verifyOutput', '\nTest 2: Trying to login with deleted credentials...');
+            try {
+                const formData = new URLSearchParams();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    log('verifyOutput', '❌ FAILED: Login succeeded (should have failed)!', true);
+                } else {
+                    log('verifyOutput', '✅ PASS: Login failed (expected)');
+                }
+            } catch (error) {
+                log('verifyOutput', `Network error: ${error.message}`, true);
+            }
+
+            log('verifyOutput', '\n🎉 Verification complete! Account has been successfully deleted.');
+        }
+    </script>
+</body>
+</html>

@@ -74,12 +74,16 @@ class FlickrClient:
                 # Thumbnail URL (small size)
                 thumbnail_url = f"https://live.staticflickr.com/{photo['server']}/{photo['id']}_{photo['secret']}_m.jpg"
                 
+                # Flickr photo page URL
+                flickr_page_url = f"https://www.flickr.com/photos/{photo.get('owner', '')}/{photo['id']}/"
+                
                 candidate = ImageCandidate(
                     id=f"flickr_{photo['id']}",
                     url=image_url,
                     thumbnail_url=thumbnail_url,
                     photographer=photo.get('ownername', 'Unknown'),
-                    source_api="flickr"
+                    source_api="flickr",
+                    source_url=flickr_page_url
                 )
                 candidates.append(candidate)
             

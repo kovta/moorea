@@ -2,12 +2,13 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
-from database import get_db, User
+from database import get_db, User, Moodboard
 from services.auth_service import (
     authenticate_user, create_user, create_access_token, 
     verify_token, get_user_by_username, get_user_by_email,
@@ -106,3 +107,118 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
 async def read_users_me(current_user: User = Depends(get_current_user)):
     """Get current user information."""
     return current_user
+
+@router.get("/export-data")
+async def export_user_data(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> JSONResponse:
+    """Export all user data for GDPR compliance.
+    
+    Returns a complete JSON export of all user data including:
+    - Account information
+    - All saved moodboards with full details
+    - Metadata about data collection and usage
+    
+    This endpoint satisfies GDPR Article 20 (Right to Data Portability)
+    and CCPA Section 1798.110 (Right to Know).
+    """
+    # Get all user moodboards
+    moodboards = db.query(Moodboard).filter(Moodboard.user_id == current_user.id).all()
+    
+    # Prepare moodboard data
+    moodboards_data = []
+    for mb in moodboards:
+        moodboards_data.append({
+            "id": mb.id,
+            "title": mb.title,
+            "description": mb.description,
+            "aesthetic": mb.aesthetic,
+            "images": mb.images,  # JSON field with full image metadata
+            "created_at": mb.created_at.isoformat() if mb.created_at else None,
+            "updated_at": mb.updated_at.isoformat() if mb.updated_at else None
+        })
+    
+    # Prepare complete export
+    export_data = {
+        "export_metadata": {
+            "export_date": datetime.utcnow().isoformat(),
+            "export_version": "1.0",
+            "data_controller": "Moorea",
+            "privacy_policy": "Moorea.mood.com/privacy",
+            "contact_email": "annaszilviakennedy@gmail.com"
+        },
+        "user_account": {
+            "id": current_user.id,
+            "username": current_user.username,
+            "email": current_user.email,
+            "is_active": current_user.is_active,
+            "account_created": current_user.created_at.isoformat() if current_user.created_at else None,
+            "last_updated": current_user.updated_at.isoformat() if current_user.updated_at else None
+        },
+        "moodboards": moodboards_data,
+        "data_usage_summary": {
+            "total_moodboards": len(moodboards_data),
+            "data_stored": [
+                "Account credentials (username, email, hashed password)",
+                "Saved moodboards (titles, descriptions, image references)",
+                "Session tokens (temporary, expire after 30 minutes)"
+            ],
+            "data_not_stored": [
+                "Uploaded images (processed temporarily, not saved)",
+                "Browsing history",
+                "IP addresses",
+                "Device information"
+            ],
+            "third_party_services": [
+                "Unsplash (image source)",
+                "Pexels (image source)",
+                "Flickr (image source)",
+                "Pinterest (image source, if enabled)"
+            ]
+        },
+        "your_rights": {
+            "right_to_access": "You are currently exercising this right",
+            "right_to_rectification": "Update your data via account settings",
+            "right_to_erasure": "Delete your account to remove all data",
+            "right_to_data_portability": "This JSON export provides all your data",
+            "right_to_object": "Contact us at annaszilviakennedy@gmail.com",
+            "right_to_withdraw_consent": "Delete your account at any time"
+        }
+    }
+    
+    # Return as downloadable JSON
+    return JSONResponse(
+        content=export_data,
+        headers={
+            "Content-Disposition": f"attachment; filename=moorea_data_export_{current_user.username}_{datetime.utcnow().strftime('%Y%m%d')}.json",
+            "Content-Type": "application/json"
+        }
+    )
+
+@router.delete("/delete-account")
+async def delete_user_account(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete user account and all associated data (GDPR Right to Erasure).
+    
+    This permanently deletes:
+    - User account
+    - All saved moodboards
+    - All associated data
+    
+    This action cannot be undone.
+    """
+    # Delete all user's moodboards first (cascade should handle this, but being explicit)
+    db.query(Moodboard).filter(Moodboard.user_id == current_user.id).delete()
+    
+    # Delete user account
+    db.delete(current_user)
+    db.commit()
+    
+    return {
+        "message": "Account deleted successfully",
+        "deleted_at": datetime.utcnow().isoformat(),
+        "username": current_user.username
+    }

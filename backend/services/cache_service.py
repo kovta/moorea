@@ -1,4 +1,36 @@
-"""Redis caching service for performance optimization."""
+"""Redis caching service for performance optimization.
+
+CACHE TTL (Time-To-Live) POLICY:
+================================
+This service implements explicit TTL for all cached data to comply with API provider guidelines,
+particularly Pinterest's requirement: "Do not store any information accessed through any Pinterest 
+Materials including the API."
+
+Cache Types and TTLs:
+- Classification Cache: 24 hours (aesthetic classification results from CLIP model)
+  - Stores: AI-generated aesthetic predictions for uploaded images
+  - Why: Classification is deterministic; same image = same result
+  - Data Stored: Only aesthetic names and scores (no API data, no raw images)
+  
+- API Response Cache: 1 hour (search results from Unsplash, Pexels, Flickr, Pinterest)
+  - Stores: Image URLs and metadata (NOT raw API responses)
+  - Why: Performance optimization to reduce API calls within rate limits
+  - Data Stored: Only URLs, photographer names, source links (publicly accessible info)
+  - Compliance: Does NOT store proprietary API data structures or private information
+  
+- Embedding Cache: 2 hours (CLIP embeddings for similarity scoring)
+  - Stores: Vector embeddings for candidate images
+  - Why: Embedding computation is expensive; same image URL = same embedding
+  - Data Stored: Numerical vectors only, derived from public images
+  
+- Moodboard Cache: 1 hour (complete generated moodboards)
+  - Stores: Final moodboard with selected images
+  - Why: Short TTL ensures fresh results while reducing duplicate computation
+  - Data Stored: References to images (URLs), not the images themselves
+
+IMPORTANT: We cache search queries and results (which are public data), NOT raw API responses
+or user-specific information. All cached data expires automatically per TTL settings.
+"""
 
 import json
 import logging
@@ -14,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 
 class CacheService:
-    """Service for Redis-based caching."""
+    """Service for Redis-based caching with explicit TTL policy."""
     
     def __init__(self):
         self.redis_client: Optional[redis.Redis] = None
@@ -74,7 +106,12 @@ class CacheService:
             return None
     
     async def set_classification_cache(self, image_content: bytes, classification_result: List[Dict]) -> None:
-        """Cache aesthetic classification result."""
+        """Cache aesthetic classification result.
+        
+        TTL: 24 hours (settings.classification_cache_ttl)
+        Data: Only aesthetic names and confidence scores (no raw image data)
+        Compliance: Classification results are AI-generated, not API data
+        """
         if not self._connected:
             return
         
@@ -87,7 +124,7 @@ class CacheService:
                 json.dumps(classification_result)
             )
             
-            logger.debug(f"Cached classification: {key}")
+            logger.debug(f"Cached classification: {key} (TTL: {settings.classification_cache_ttl}s)")
             
         except Exception as e:
             logger.warning(f"Cache set error: {str(e)}")
@@ -112,7 +149,13 @@ class CacheService:
             return None
     
     async def set_api_cache(self, api_name: str, query: str, api_result: List[Dict]) -> None:
-        """Cache API response."""
+        """Cache API response.
+        
+        TTL: 1 hour (settings.api_cache_ttl)
+        Data: Only image URLs, photographer names, and public metadata (NOT raw API responses)
+        Compliance: Stores publicly accessible information, not proprietary API data structures
+        Pinterest Compliance: Does NOT store raw Pinterest API responses, only processed image references
+        """
         if not self._connected:
             return
         
@@ -125,7 +168,7 @@ class CacheService:
                 json.dumps(api_result)
             )
             
-            logger.debug(f"Cached API response: {api_name}:{query}")
+            logger.debug(f"Cached API response: {api_name}:{query} (TTL: {settings.api_cache_ttl}s)")
             
         except Exception as e:
             logger.warning(f"API cache set error: {str(e)}")

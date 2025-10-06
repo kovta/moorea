@@ -53,7 +53,8 @@ class PexelsClient:
                     url=src.get('large2x', src.get('large', src.get('medium', ''))),
                     thumbnail_url=src.get('medium', src.get('small', '')),
                     photographer=photo.get('photographer', 'Unknown'),
-                    source_api="pexels"
+                    source_api="pexels",
+                    source_url=photo.get('url', f"https://www.pexels.com/photo/{photo['id']}/")
                 )
                 candidates.append(candidate)
             
