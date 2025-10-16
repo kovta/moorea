@@ -17,9 +17,10 @@ const Home: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = async (file: File, pinterestConsent: boolean) => {
     try {
       console.log('🚀 Starting upload for file:', file.name, 'Size:', file.size);
+      console.log('📌 Pinterest consent:', pinterestConsent);
       setUploadedFile(file); // Store the uploaded file
       setMoodboardState({ status: JobStatus.PENDING });
       

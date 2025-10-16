@@ -2,12 +2,13 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 interface ImageUploadProps {
-  onFileSelect: (file: File) => void;
+  onFileSelect: (file: File, pinterestConsent: boolean) => void;
   isUploading: boolean;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [pinterestConsent, setPinterestConsent] = useState<boolean>(false);
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
     if (rejectedFiles.length > 0) {
@@ -21,13 +22,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) 
     if (acceptedFiles.length > 0 && !isUploading) {
       const file = acceptedFiles[0];
       console.log('✅ File accepted:', file.name, file.type);
-      onFileSelect(file);
+      onFileSelect(file, pinterestConsent);
       
       // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
-  }, [onFileSelect, isUploading]);
+  }, [onFileSelect, isUploading, pinterestConsent]);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
@@ -147,6 +148,27 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) 
               <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">
                 👟 Shoes
               </span>
+            </div>
+          </div>
+
+          {/* Pinterest Consent Checkbox */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="pinterest-consent"
+                checked={pinterestConsent}
+                onChange={(e) => setPinterestConsent(e.target.checked)}
+                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <div className="text-sm">
+                <label htmlFor="pinterest-consent" className="font-medium text-blue-900 cursor-pointer">
+                  📌 Include Pinterest content in my moodboard
+                </label>
+                <p className="text-blue-700 mt-1">
+                  I consent to Pinterest images being included in my moodboard. Pinterest content will be properly attributed and linked back to Pinterest.
+                </p>
+              </div>
             </div>
           </div>
         </div>
