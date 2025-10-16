@@ -61,11 +61,11 @@
 ## Pinterest API Integration Business Case
 
 ### Primary Use Case: Pinterest as Content Source for Moodboards
-We seek Pinterest API access to **use Pinterest's vast image collection as a content source** for our AI-generated moodboards, similar to our current Unsplash and Pexels integrations:
+We seek Pinterest API access to **use Pinterest images as a content source** for our AI-generated moodboards, similar to our current Unsplash and Pexels integrations:
 
-1. **Enhanced Content Diversity**: Pinterest's extensive collection of lifestyle, fashion, and aesthetic images provides richer moodboard content
-2. **User-Curated Quality**: Pinterest's human-curated boards ensure high-quality, aesthetically relevant images for specific styles
-3. **Aesthetic Accuracy**: Pinterest's categorized content by aesthetics (cottagecore, dark academia, etc.) improves moodboard relevance
+1. **Enhanced Content Diversity**: Pinterest images provide additional moodboard content
+2. **Content Variety**: Pinterest boards offer diverse visual content for moodboard generation
+3. **Additional Source**: Pinterest serves as an additional content source alongside existing APIs
 
 ### Required Pinterest API Permissions
 - **pins:read**: Access to search and retrieve pins based on aesthetic keywords
