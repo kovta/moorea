@@ -28,6 +28,7 @@ When you create an account or use our Service, we may collect:
   - The aesthetic classification detected by our AI
   - URLs to images from third-party sources (Unsplash, Pexels, Flickr, Pinterest)
   - Image metadata including photographer credits and source information
+  - **Important**: We store only Pinterest URLs and metadata, never the actual Pinterest images
 
 ### 1.4 Pinterest API Data
 When using Pinterest integration, we access the following Pinterest API endpoints:
@@ -41,6 +42,11 @@ When using Pinterest integration, we access the following Pinterest API endpoint
 - Board names and descriptions (public information)
 - User display names (public profile information)
 - Pin creation dates and engagement metrics (public data)
+
+**Data Storage Policy:**
+- **We store ONLY**: Pinterest pin URLs, board names, and user display names for attribution
+- **We do NOT store**: Pinterest images, pin descriptions, or any Pinterest content data
+- **Compliance**: We call Pinterest API each time we need Pinterest content, following Pinterest's "no storage" requirement
 
 **Data NOT Retrieved:**
 - Private pins or boards
@@ -285,9 +291,10 @@ We ensure appropriate safeguards for international data transfers through:
 
 ### 10.3 Pinterest API Data Transfers
 When using Pinterest integration:
-- Pinterest data is processed in accordance with Pinterest's data processing terms
-- We do not transfer Pinterest data to countries without appropriate safeguards
-- Pinterest data is subject to the same transfer protections as your personal data
+- **No Pinterest Data Storage**: We do not store Pinterest content data, only URLs and attribution metadata
+- **API Calls Only**: We call Pinterest API each time we need content, following Pinterest's "no storage" requirement
+- **Attribution Metadata**: Only Pinterest pin URLs, board names, and user display names are stored for attribution
+- **No Content Transfer**: Pinterest images and content remain hosted by Pinterest and are not transferred to our servers
 
 ### 10.4 Your Rights Regarding Transfers
 You have the right to:
@@ -356,7 +363,8 @@ If you have questions about this Privacy Policy or our data practices, please co
 ### 17.1 Pinterest Developer Guidelines Compliance
 We comply with Pinterest's Developer Guidelines by:
 ✅ Being honest and transparent about our Service functionality  
-✅ Not storing information accessed through Pinterest API (only URLs)  
+✅ **NOT storing Pinterest content data** - We only store Pinterest URLs and attribution metadata  
+✅ **API calls only** - We call Pinterest API each time we need content, never storing Pinterest data  
 ✅ Only accessing public Pinterest content  
 ✅ Not soliciting or collecting login credentials  
 ✅ Keeping API credentials private and secure  
