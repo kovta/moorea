@@ -6,7 +6,7 @@ import logging
 from typing import Optional
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status, Form
 from PIL import Image
 
 from models import (
@@ -47,7 +47,10 @@ def _calculate_file_hash(file_content: bytes) -> str:
 
 
 @router.post("/moodboard/generate", response_model=MoodboardResponse)
-async def generate_moodboard(file: UploadFile = File(...)):
+async def generate_moodboard(
+    file: UploadFile = File(...),
+    pinterest_consent: bool = Form(False)
+):
     """Generate moodboard from uploaded clothing image."""
     try:
         # Validate file
@@ -86,7 +89,7 @@ async def generate_moodboard(file: UploadFile = File(...)):
         )
         
         # Queue moodboard generation
-        await moodboard_service.queue_generation(job_id, file_content)
+        await moodboard_service.queue_generation(job_id, file_content, pinterest_consent)
         
         logger.info(f"Queued moodboard generation job: {job_id}")
         

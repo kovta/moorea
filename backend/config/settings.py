@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     # Pinterest API
     pinterest_client_id: Optional[str] = None
     pinterest_client_secret: Optional[str] = None
+    pinterest_access_token: Optional[str] = None
     pinterest_redirect_uri: str = "http://localhost:3000/auth/pinterest/callback"
     
     # ML Model settings - Optimized for speed with more images

@@ -1,0 +1,55 @@
+2025-09-08 09:37:01,080 - __main__ - INFO - 🚀 Logging to file: /Users/kovacstamaspal/dev/moorea/backend/moodboard_backend.log
+2025-09-08 09:37:01,080 - __main__ - INFO - ================================================================================
+2025-09-08 09:37:01,080 - __main__ - INFO - 🌸 NEW BACKEND SESSION STARTED 🌸
+2025-09-08 09:37:01,080 - __main__ - INFO - ================================================================================
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/kovacstamaspal/dev/moorea/backend/app/main.py", line 111, in <module>
+    
+    
+    ...<4 lines>...
+        reload=settings.debug
+        ^
+  File "/Users/kovacstamaspal/.pyenv/versions/3.13.2/lib/python3.13/site-packages/uvicorn/main.py", line 587, in run
+    server.run()
+    ~~~~~~~~~~^^
+  File "/Users/kovacstamaspal/.pyenv/versions/3.13.2/lib/python3.13/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kovacstamaspal/.pyenv/versions/3.13.2/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/Users/kovacstamaspal/.pyenv/versions/3.13.2/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+  File "/Users/kovacstamaspal/.pyenv/versions/3.13.2/lib/python3.13/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+    ~~~~~~~~~~~^^
+  File "/Users/kovacstamaspal/.pyenv/versions/3.13.2/lib/python3.13/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/kovacstamaspal/.pyenv/versions/3.13.2/lib/python3.13/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+  File "/Users/kovacstamaspal/.pyenv/versions/3.13.2/lib/python3.13/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1026, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/kovacstamaspal/dev/moorea/backend/app/main.py", line 15, in <module>
+    from app.routes import moodboard, aesthetics, pinterest_auth
+  File "/Users/kovacstamaspal/dev/moorea/backend/app/routes/pinterest_auth.py", line 12, in <module>
+    from services.pinterest_client import pinterest_client, PinterestTokens
+  File "/Users/kovacstamaspal/dev/moorea/backend/services/pinterest_client.py", line 246, in <module>
+    pinterest_client = PinterestClient()
+  File "/Users/kovacstamaspal/dev/moorea/backend/services/pinterest_client.py", line 47, in __init__
+    self.client_id = settings.pinterest_client_id
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kovacstamaspal/.pyenv/versions/3.13.2/lib/python3.13/site-packages/pydantic/main.py", line 991, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'Settings' object has no attribute 'pinterest_client_id'

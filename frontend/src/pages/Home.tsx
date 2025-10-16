@@ -26,7 +26,7 @@ const Home: React.FC = () => {
       
       // Upload image
       console.log('📤 Calling uploadImage API...');
-      const response = await uploadImage(file);
+      const response = await uploadImage(file, pinterestConsent);
       console.log('✅ Upload successful:', response);
       
       setMoodboardState({

@@ -24,12 +24,14 @@ const apiClient = axios.create({
   timeout: 30000,
 });
 
-export const uploadImage = async (file: File): Promise<MoodboardResponse> => {
+export const uploadImage = async (file: File, pinterestConsent: boolean = false): Promise<MoodboardResponse> => {
   console.log('🔧 API Base URL:', API_BASE);
   console.log('📁 File details:', { name: file.name, size: file.size, type: file.type });
+  console.log('📌 Pinterest consent:', pinterestConsent);
   
   const formData = new FormData();
   formData.append('file', file);
+  formData.append('pinterest_consent', pinterestConsent.toString());
   
   console.log('🌐 Making POST request to:', `${API_BASE}/moodboard/generate`);
   

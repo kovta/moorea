@@ -29,9 +29,15 @@ class ImageCandidate(BaseModel):
     url: str = Field(..., description="Full resolution image URL")
     thumbnail_url: Optional[str] = Field(None, description="Thumbnail image URL")
     photographer: Optional[str] = Field(None, description="Photographer name for attribution")
-    source_api: str = Field(..., description="Source API (unsplash, pexels, flickr)")
+    source_api: str = Field(..., description="Source API (unsplash, pexels, flickr, pinterest)")
     similarity_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="CLIP similarity score")
     download_location: Optional[str] = Field(None, description="Unsplash download tracking URL")
+    
+    # Pinterest-specific fields
+    pinterest_url: Optional[str] = Field(None, description="Original Pinterest pin URL")
+    pinterest_board: Optional[str] = Field(None, description="Pinterest board name")
+    title: Optional[str] = Field(None, description="Pin title")
+    description: Optional[str] = Field(None, description="Pin description")
 
 
 class MoodboardResponse(BaseModel):

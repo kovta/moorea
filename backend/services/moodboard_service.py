@@ -13,6 +13,7 @@ from services.aesthetic_service import aesthetic_service
 from services.unsplash_client import unsplash_client
 from services.pexels_client import pexels_client
 from services.flickr_client import flickr_client
+from services.pinterest_client import pinterest_client, initialize_pinterest_client
 from services.clip_service import clip_service
 
 logger = logging.getLogger(__name__)
@@ -22,14 +23,19 @@ class MoodboardService:
     """Service for orchestrating moodboard generation pipeline."""
     
     def __init__(self):
-        pass
+        # Initialize Pinterest client if token is available
+        if settings.pinterest_access_token:
+            initialize_pinterest_client(settings.pinterest_access_token)
+            logger.info("✅ Pinterest client initialized")
+        else:
+            logger.warning("⚠️ Pinterest access token not found - Pinterest integration disabled")
     
-    async def queue_generation(self, job_id: UUID, image_content: bytes) -> None:
+    async def queue_generation(self, job_id: UUID, image_content: bytes, pinterest_consent: bool = False) -> None:
         """Queue moodboard generation job."""
         # For now, process immediately (add proper queue later)
-        asyncio.create_task(self._process_moodboard(job_id, image_content))
+        asyncio.create_task(self._process_moodboard(job_id, image_content, pinterest_consent))
     
-    async def _process_moodboard(self, job_id: UUID, image_content: bytes) -> None:
+    async def _process_moodboard(self, job_id: UUID, image_content: bytes, pinterest_consent: bool = False) -> None:
         """Process moodboard generation pipeline."""
         try:
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=0)
@@ -48,7 +54,7 @@ class MoodboardService:
             
             # Step 3: Fetch candidates (placeholder)
             logger.info(f"Fetching image candidates for job {job_id}")
-            candidates = await self._fetch_candidates(search_keywords)
+            candidates = await self._fetch_candidates(search_keywords, pinterest_consent)
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=75)
             
             # Step 4: Re-rank and select (placeholder)
@@ -293,7 +299,7 @@ class MoodboardService:
         
         return unique_keywords, list(negative_keywords)
     
-    async def _fetch_candidates(self, keywords: List[str]) -> List[ImageCandidate]:
+    async def _fetch_candidates(self, keywords: List[str], pinterest_consent: bool = False) -> List[ImageCandidate]:
         """Fetch image candidates from APIs - optimized for speed."""
         all_candidates = []
         
@@ -301,17 +307,23 @@ class MoodboardService:
         top_keywords = keywords[:3]  # Reduced to 3 keywords for speed
         images_per_keyword = max(2, settings.max_candidates // len(top_keywords)) if top_keywords else 4
         
-        # ⚡ Use only 1 fastest API (Unsplash) for maximum speed
+        # ⚡ Use Unsplash + Pinterest (if consented) for speed
         all_tasks = []
         for keyword in top_keywords:
-            # Only use Unsplash for speed
+            # Always use Unsplash for speed
             tasks = [
                 unsplash_client.search_photos(keyword, per_page=images_per_keyword)
             ]
+            
+            # Add Pinterest if user consented and client is available
+            if pinterest_consent and pinterest_client:
+                tasks.append(pinterest_client.search_pins(keyword, limit=images_per_keyword))
+            
             all_tasks.extend(tasks)
         
         # Execute all API calls concurrently with shorter timeout
-        logger.info(f"⚡ SPEED MODE: Fetching from 1 API for {len(top_keywords)} keywords ({len(all_tasks)} total requests)")
+        api_count = 1 + (1 if pinterest_consent and pinterest_client else 0)
+        logger.info(f"⚡ SPEED MODE: Fetching from {api_count} API(s) for {len(top_keywords)} keywords ({len(all_tasks)} total requests)")
         
         try:
             # Use asyncio.wait_for with shorter timeout for speed
