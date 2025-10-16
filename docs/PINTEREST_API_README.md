@@ -60,12 +60,12 @@
 
 ## Pinterest API Integration Business Case
 
-### Primary Use Case: Pinterest as Content Source for Moodboards
-We seek Pinterest API access to **use Pinterest images as a content source** for our AI-generated moodboards, similar to our current Unsplash and Pexels integrations:
+### Primary Use Case: Pinterest as Additional Content Source
+We seek Pinterest API access to **use Pinterest images as an additional content source** for our AI-generated moodboards, alongside our existing Unsplash and Pexels integrations:
 
-1. **Enhanced Content Diversity**: Pinterest images provide additional moodboard content
-2. **Content Variety**: Pinterest boards offer diverse visual content for moodboard generation
-3. **Additional Source**: Pinterest serves as an additional content source alongside existing APIs
+1. **Additional Content Source**: Pinterest images provide supplementary content for moodboards
+2. **Content Variety**: Pinterest boards offer additional visual content options
+3. **Source Diversity**: Pinterest serves as one of multiple content sources for comprehensive moodboards
 
 ### Required Pinterest API Permissions
 - **pins:read**: Access to search and retrieve pins based on aesthetic keywords
@@ -77,6 +77,7 @@ We seek Pinterest API access to **use Pinterest images as a content source** for
 - **Content Attribution**: Full Pinterest user and original source attribution displayed in moodboards
 - **API Compliance**: Pinterest content used within moodboard context only, respecting all licensing terms
 - **Quality Control**: Pinterest images filtered through same CLIP similarity scoring as other sources
+- **User Consent**: Explicit user consent required for Pinterest content inclusion
 
 ## Content Quality & Curation Standards
 
@@ -143,7 +144,7 @@ Our platform maintains a professionally curated vocabulary of **91+ fashion aest
 ### API Rate Management
 - **Current Load**: ~1000 moodboards generated monthly (beta testing)
 - **Projected Growth**: 10,000+ monthly active users within 6 months of Pinterest integration
-- **Pinterest Usage**: Pinterest content integrated into ~40% of generated moodboards for enhanced diversity
+- **Pinterest Usage**: Pinterest content included in moodboards only when users explicitly consent
 - **Rate Limiting**: Intelligent caching and user-paced interactions to respect API limits
 
 ## Contact Information
