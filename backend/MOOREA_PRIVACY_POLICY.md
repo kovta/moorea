@@ -266,6 +266,7 @@ We do **not** use third-party advertising or tracking cookies. Any tracking is l
   - Classify Pinterest content for better search results
 - **No Training on User Data**: We do **not** use your uploaded images or Pinterest data to train or improve our AI models
 - **Derivative Works**: Pinterest content is used only for moodboard generation and aesthetic matching
+- **Content Integrity**: Pinterest images remain unmodified - we only calculate similarity scores, never alter the actual image content
 - **AI Transparency**: All AI processing is for the stated purpose of moodboard generation only
 
 ### 9.4 User Controls and Opt-Out Options
@@ -377,6 +378,7 @@ We comply with Pinterest's Developer Guidelines by:
 - Provide full Pinterest user attribution
 - Link pins back to their source on Pinterest
 - Not cover or obscure Pinterest content
+- Keep Pinterest images completely unmodified - only calculate similarity scores
 
 **What We Do NOT Do:**
 - Take actions on behalf of Pinterest users without consent
