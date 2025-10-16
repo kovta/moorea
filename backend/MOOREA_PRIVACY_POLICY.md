@@ -200,6 +200,22 @@ If you are in the European Economic Area, you have the right to:
 - Withdraw consent at any time
 - Lodge a complaint with your data protection authority
 
+**Right to Effective Judicial Remedy (Article 141 GDPR)**
+Under Article 141 of the GDPR, you have the right to an effective judicial remedy against a controller or processor. This means:
+- You can bring proceedings against Moorea in the courts of the Member State where you are habitually resident
+- You can bring proceedings in the courts of the Member State where Moorea has an establishment
+- You can bring proceedings in the courts of the Member State where the data subject's rights have been infringed
+- You have the right to seek compensation for material or non-material damage resulting from GDPR violations
+- You can seek injunctive relief to prevent or stop unlawful processing of your personal data
+
+If you believe your data protection rights have been violated, you may:
+1. **Contact us first** at annaszilviakennedy@gmail.com to resolve the matter informally
+2. **Lodge a complaint** with your local data protection authority (DPA)
+3. **Seek judicial remedy** in the courts of your country of residence or where Moorea operates
+4. **Claim compensation** for any damage suffered due to unlawful processing
+
+We are committed to resolving data protection concerns promptly and fairly, and we encourage you to contact us before pursuing formal legal action.
+
 #### CCPA (California Users)
 If you are a California resident, you have the right to:
 - Know what personal information we collect, use, and share

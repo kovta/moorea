@@ -72,8 +72,8 @@ aesthetics:
     description: "Whimsical, magical fairy-inspired aesthetic"
   
   coastal_grandmother:
-    keywords: ["linen clothing", "beach house", "hydrangea flowers", "wicker furniture", "ocean breeze"]
-    description: "Relaxed coastal living with natural textures"
+    keywords: ["linen clothing", "beach house", "hydrangea flowers", "wicker furniture", "ocean breeze", "coastal living", "grandmother style", "beach cottage", "natural textures", "relaxed fashion", "coastal decor", "seaside style", "comfortable clothing", "beach lifestyle", "coastal grandmother aesthetic", "ocean view", "beachfront home", "coastal fashion", "grandmother chic", "seaside living"]
+    description: "Relaxed coastal living with natural textures and comfortable grandmother style"
 
   # Urban and Street Aesthetics
   streetwear:
@@ -94,7 +94,8 @@ aesthetics:
 
   # Outdoor and Nature Aesthetics
   gorpcore:
-    keywords: ["hiking wear", "technical apparel", "outdoor gear", "waterproof materials", "durable fabrics", "cargo pants", "utility pockets", "fleece jacket", "hiking boots", "trail mix", "functional clothing", "rugged wear", "practical fashion", "earthy colors", "streetwear blend", "urban hiking", "comfort utility"]
+    keywords: ["hiking gear", "technical outdoor apparel", "waterproof hiking jacket", "cargo hiking pants", "utility hiking vest", "hiking backpack", "trail hiking equipment", "mountain gear", "outdoor technical clothing", "hiking trail gear", "outdoor adventure equipment", "technical hiking wear"]
+    negative_keywords: ["fashion boots", "dress boots", "knee high boots", "riding boots", "leather dress boots", "casual boots", "street boots", "formal boots", "office boots"]
     description: "Functional rugged outdoor gear blended with streetwear for everyday urban use"  
   cabincore:
     keywords: ["cozy cabin", "buffalo plaid", "flannel shirt", "hiking boots", "campfire"]
@@ -231,7 +232,8 @@ aesthetics:
     description: "1920s Art Deco elegance with geometric patterns and luxury"
   
   mod:
-    keywords: ["1960s fashion", "mini skirt", "bold patterns", "go-go boots", "geometric prints", "swinging sixties"]
+    keywords: ["1960s mod fashion", "mini skirt", "bold geometric patterns", "swinging sixties", "mod subculture", "london mod style", "chelsea boots", "mod haircut"]
+    negative_keywords: ["general boots", "casual boots", "everyday boots", "modern boots", "knee high boots", "riding boots", "work boots"]
     description: "1960s mod fashion with bold geometric patterns and mini skirts"
   
   seventies:
@@ -248,8 +250,8 @@ aesthetics:
     description: "Grandmother-inspired domestic comfort and traditional skills"
   
   farmcore:
-    keywords: ["overalls", "straw hat", "vegetable garden", "farm animals", "rural lifestyle", "country living"]
-    description: "Authentic farm life and agricultural lifestyle"
+    keywords: ["overalls", "straw hat", "vegetable garden", "farm animals", "rural lifestyle", "country living", "cowboy boots", "western wear", "ranch style", "country fashion"]
+    description: "Authentic farm life and agricultural lifestyle with rural fashion and western wear"
   
   goblincore:
     keywords: ["mushroom forest", "shiny objects", "earth tones", "vintage trinkets", "woodland creatures", "moss covered"]

@@ -45,8 +45,8 @@ class Settings(BaseSettings):
     # ML Model settings - Optimized for speed with more images
     clip_model_name: str = "RN50"  # Faster ResNet-50 model vs ViT-B/32
     clip_backend: str = "fashion"
-    max_candidates: int = 30  # Increased to ensure enough candidates for selection
-    final_moodboard_size: int = 15  # Increased for 3 rows (5×3 grid layout)
+    max_candidates: int = 20  # Reduced for faster processing
+    final_moodboard_size: int = 12  # Reduced for faster generation
     
     # File paths
     project_root: Path = Path(__file__).parent.parent.parent
