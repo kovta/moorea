@@ -12,7 +12,7 @@ from models import HealthResponse
 from services.aesthetic_service import aesthetic_service
 from services.clip_service import clip_service
 from services.cache_service import cache_service
-from app.routes import moodboard, aesthetics, auth, moodboard_save
+from app.routes import moodboard, aesthetics, auth, moodboard_save, waitlist
 from database import create_tables
 
 
@@ -30,10 +30,21 @@ async def lifespan(app: FastAPI):
     create_tables()
     logger.info("Database tables created")
     
-    # Initialize services
+    # Initialize services (optional - gracefully handle failures)
     await cache_service.initialize()
-    await aesthetic_service.initialize()
-    await clip_service.initialize()
+    
+    try:
+        await aesthetic_service.initialize()
+        logger.info("Aesthetic service initialized")
+    except Exception as e:
+        logger.warning(f"Aesthetic service initialization failed (ML features disabled): {e}")
+    
+    try:
+        await clip_service.initialize()
+        logger.info("CLIP service initialized")
+    except Exception as e:
+        logger.warning(f"CLIP service initialization failed (ML features disabled): {e}")
+    
     logger.info("Services initialized successfully")
     
     yield
@@ -51,13 +62,20 @@ app = FastAPI(
 )
 
 # CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+import os
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
+allowed_origins = (
+    allowed_origins_str.split(",") if allowed_origins_str 
+    else [
         "http://localhost:3000",  # React dev server
         "file://",  # Allow file:// protocol for HTML test files
-        "*"  # Allow all origins for testing
-    ],
+        "*"  # Allow all origins for testing (change in production)
+    ]
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -68,6 +86,7 @@ app.include_router(moodboard.router, prefix="/api/v1", tags=["moodboard"])
 app.include_router(aesthetics.router, prefix="/api/v1", tags=["aesthetics"])
 app.include_router(auth.router, tags=["authentication"])
 app.include_router(moodboard_save.router, tags=["moodboard-save"])
+app.include_router(waitlist.router, tags=["waitlist"])
 
 
 @app.get("/", response_model=HealthResponse)
