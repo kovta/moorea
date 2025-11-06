@@ -4,10 +4,8 @@ uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 
 # ML and Image Processing (compatible versions)
-# Note: torch and torchvision are large - using CPU-only versions in nixpacks.toml
+# Note: torch and torchvision are installed separately in nixpacks.toml to use CPU-only versions
 # For Railway: torch will be installed via pip with --index-url flag in build command
-torch==2.1.0
-torchvision==0.16.0
 transformers
 pillow
 git+https://github.com/openai/CLIP.git
