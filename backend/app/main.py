@@ -64,21 +64,34 @@ app = FastAPI(
 # CORS middleware
 import os
 allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
-allowed_origins = (
-    allowed_origins_str.split(",") if allowed_origins_str 
-    else [
-        "http://localhost:3000",  # React dev server
-        "file://",  # Allow file:// protocol for HTML test files
-        "*"  # Allow all origins for testing (change in production)
-    ]
-)
 
+# Parse allowed origins from environment variable
+# Format: "https://example.com,https://www.example.com,http://localhost:3000"
+if allowed_origins_str:
+    # Production: Use specific origins from environment variable
+    allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
+    logger.info(f"CORS configured for production origins: {allowed_origins}")
+else:
+    # Development: Allow localhost and common dev origins
+    allowed_origins = [
+        "http://localhost:3000",  # React dev server
+        "http://localhost:3001",  # Alternative React port
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+    ]
+    logger.warning("⚠️  ALLOWED_ORIGINS not set - using development defaults. Set this in production!")
+
+# CORS configuration
+# Note: When allow_credentials=True, you CANNOT use allow_origins=["*"]
+# Must specify exact origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=True,  # Required for cookies/auth tokens
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Explicit methods
+    allow_headers=["*"],  # Allow all headers (Content-Type, Authorization, etc.)
+    expose_headers=["*"],  # Expose all headers to frontend
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 # Include routers
