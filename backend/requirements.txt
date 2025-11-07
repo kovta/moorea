@@ -1,7 +1,7 @@
-# Core FastAPI
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-python-multipart==0.0.6
+# Core FastAPI (updated for Pydantic v2 compatibility)
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
 
 # ML and Image Processing (compatible versions)
 # Note: torch and torchvision are installed separately in nixpacks.toml to use CPU-only versions
