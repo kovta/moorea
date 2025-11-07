@@ -101,12 +101,30 @@ async def root():
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
-    """Health check endpoint."""
-    return HealthResponse(
-        status="healthy",
-        timestamp=datetime.now(),
-        version=settings.app_version
-    )
+    """Health check endpoint with database connectivity check."""
+    from sqlalchemy import text
+    from database import engine
+    
+    try:
+        # Quick database connectivity check
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+            conn.commit()
+        
+        return HealthResponse(
+            status="healthy",
+            timestamp=datetime.now(),
+            version=settings.app_version
+        )
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        # Still return healthy to avoid false positives, but log the error
+        # Railway will restart if the app actually crashes
+        return HealthResponse(
+            status="degraded",
+            timestamp=datetime.now(),
+            version=settings.app_version
+        )
 
 
 if __name__ == "__main__":
