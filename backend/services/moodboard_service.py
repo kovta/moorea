@@ -23,12 +23,11 @@ class MoodboardService:
     """Service for orchestrating moodboard generation pipeline."""
     
     def __init__(self):
-        # Initialize Pinterest client if token is available
+        # Initialize Pinterest client if token is available (optional)
         if settings.pinterest_access_token:
             initialize_pinterest_client(settings.pinterest_access_token)
             logger.info("✅ Pinterest client initialized")
-        else:
-            logger.warning("⚠️ Pinterest access token not found - Pinterest integration disabled")
+        # Pinterest is optional - no warning needed if not configured
     
     async def queue_generation(self, job_id: UUID, image_content: bytes, pinterest_consent: bool = False) -> None:
         """Queue moodboard generation job."""
