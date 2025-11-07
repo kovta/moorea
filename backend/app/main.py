@@ -12,7 +12,8 @@ from models import HealthResponse
 from services.aesthetic_service import aesthetic_service
 from services.clip_service import clip_service
 from services.cache_service import cache_service
-from app.routes import moodboard, aesthetics, auth, moodboard_save, waitlist
+from app.routes import moodboard, aesthetics, auth, moodboard_save
+from app.routes.waitlist import router as waitlist_router
 from database import create_tables
 
 
@@ -99,7 +100,7 @@ app.include_router(moodboard.router, prefix="/api/v1", tags=["moodboard"])
 app.include_router(aesthetics.router, prefix="/api/v1", tags=["aesthetics"])
 app.include_router(auth.router, tags=["authentication"])
 app.include_router(moodboard_save.router, tags=["moodboard-save"])
-app.include_router(waitlist.router, tags=["waitlist"])
+app.include_router(waitlist_router, tags=["waitlist"])
 
 
 @app.get("/", response_model=HealthResponse)
