@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import WaitlistForm from '../components/WaitlistForm';
 
 const LandingPage: React.FC = () => {
@@ -104,12 +105,12 @@ const LandingPage: React.FC = () => {
             Made with ✨ for fashion lovers
           </p>
           <div className="flex flex-wrap justify-center gap-4 text-sm">
-            <a 
-              href="/privacy" 
+            <Link 
+              to="/privacy" 
               className="hover:text-white transition-colors underline decoration-white/30 hover:decoration-white"
             >
               Privacy Policy
-            </a>
+            </Link>
             <span className="text-white/30">•</span>
             <a 
               href="mailto:annaszilviakennedy@gmail.com" 

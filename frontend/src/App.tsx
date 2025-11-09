@@ -4,15 +4,17 @@ import { AuthProvider } from './contexts/AuthContext';
 import Home from './pages/Home';
 import LandingPage from './pages/LandingPage';
 import SavedMoodboards from './pages/SavedMoodboards';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/app" element={<Home />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/waitlist" element={<LandingPage />} />
           <Route path="/saved" element={<SavedMoodboards />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
         </Routes>
       </Router>
     </AuthProvider>
