@@ -18,6 +18,20 @@ DATABASE_URL = (
     or "postgresql://kovacstamaspal@localhost/moorea"  # Local fallback
 )
 
+# Log database URL (mask password for security)
+if DATABASE_URL:
+    # Mask password in URL for logging
+    import re
+    masked_url = re.sub(r':([^:@]+)@', r':****@', DATABASE_URL)
+    print(f"🔗 Database URL: {masked_url}")
+    
+    # Warn if using localhost fallback (means DATABASE_URL not set)
+    if "localhost" in DATABASE_URL:
+        print("⚠️  WARNING: Using localhost fallback - DATABASE_URL not set in environment!")
+        print("⚠️  Set DATABASE_URL in Railway → Variables tab")
+else:
+    print("❌ ERROR: No DATABASE_URL found!")
+
 # Create engine with connection pooling and retry logic
 # This prevents connection exhaustion and handles temporary connection failures
 engine = create_engine(

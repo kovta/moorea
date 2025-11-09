@@ -28,8 +28,14 @@ async def lifespan(app: FastAPI):
     logger.info("Starting up Moodboard Generator API...")
     
     # Initialize database
-    create_tables()
-    logger.info("Database tables created")
+    try:
+        create_tables()
+        logger.info("Database tables created")
+    except Exception as e:
+        logger.error(f"❌ Failed to connect to database: {str(e)}")
+        logger.error("💡 Make sure DATABASE_URL is set in Railway → Variables tab")
+        logger.error("💡 Get your Supabase connection string from: Settings → Database → Connection string (Transaction mode)")
+        raise  # Re-raise to fail startup if DB is required
     
     # Initialize services (optional - gracefully handle failures)
     await cache_service.initialize()
