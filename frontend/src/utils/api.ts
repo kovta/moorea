@@ -119,3 +119,20 @@ export const getUserMoodboards = async (token: string): Promise<SavedMoodboard[]
   });
   return response.data;
 };
+
+// Waitlist API functions
+export interface WaitlistSubscribeRequest {
+  email: string;
+  name?: string;
+}
+
+export interface WaitlistSubscribeResponse {
+  success: boolean;
+  message: string;
+  email: string;
+}
+
+export const subscribeToWaitlist = async (request: WaitlistSubscribeRequest): Promise<WaitlistSubscribeResponse> => {
+  const response = await apiClient.post<WaitlistSubscribeResponse>('/waitlist/subscribe', request);
+  return response.data;
+};

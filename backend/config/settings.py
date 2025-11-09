@@ -38,10 +38,7 @@ class Settings(BaseSettings):
     flickr_api_key: Optional[str] = None
     
     # Pinterest API
-    pinterest_client_id: Optional[str] = None
-    pinterest_client_secret: Optional[str] = None
     pinterest_access_token: Optional[str] = None
-    pinterest_redirect_uri: str = "http://localhost:3000/auth/pinterest/callback"
     
     # ML Model settings - Optimized for speed with more images
     clip_model_name: str = "RN50"  # Faster ResNet-50 model vs ViT-B/32
