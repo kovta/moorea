@@ -1,14 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import WaitlistForm from '../components/WaitlistForm';
 
 const LandingPage: React.FC = () => {
-  const [subscriberCount, setSubscriberCount] = useState(0);
-
   const handleSuccess = (email: string) => {
     console.log('Successfully subscribed:', email);
-    // Increment counter for social proof
-    setSubscriberCount(prev => prev + 1);
     // Could add analytics tracking here
   };
 
@@ -39,14 +35,6 @@ const LandingPage: React.FC = () => {
           <p className="text-base md:text-lg text-white/90 max-w-2xl mx-auto">
             Upload your clothing photos and get instant aesthetic inspiration
           </p>
-
-          {/* Social proof */}
-          {subscriberCount > 0 && (
-            <div className="mt-6 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm animate-slide-up">
-              <span>🎉</span>
-              <span>{subscriberCount} {subscriberCount === 1 ? 'person' : 'people'} just joined!</span>
-            </div>
-          )}
         </div>
 
         {/* Signup Form Card */}
