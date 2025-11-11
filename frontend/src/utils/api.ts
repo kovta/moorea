@@ -11,13 +11,28 @@ import {
 } from '../types';
 
 // API_BASE should be the full base URL (e.g., https://railway-url.railway.app/api/v1)
-// If REACT_APP_API_URL is set, use it as-is (should include /api/v1)
+// If REACT_APP_API_URL is set, ensure it has https:// and add /api/v1 if needed
 // Otherwise, use relative path for local development
-const API_BASE = process.env.REACT_APP_API_URL 
-  ? (process.env.REACT_APP_API_URL.endsWith('/api/v1') 
-      ? process.env.REACT_APP_API_URL 
-      : `${process.env.REACT_APP_API_URL}/api/v1`)
-  : '/api/v1';
+let API_BASE = '/api/v1'; // Default for local development
+
+if (process.env.REACT_APP_API_URL) {
+  let apiUrl = process.env.REACT_APP_API_URL.trim();
+  
+  // Add https:// if missing
+  if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
+    apiUrl = `https://${apiUrl}`;
+  }
+  
+  // Remove trailing slash if present
+  apiUrl = apiUrl.replace(/\/$/, '');
+  
+  // Add /api/v1 if not already present
+  if (!apiUrl.endsWith('/api/v1')) {
+    API_BASE = `${apiUrl}/api/v1`;
+  } else {
+    API_BASE = apiUrl;
+  }
+}
 
 // Log the API base URL for debugging
 console.log('🔧 Environment check:', {
