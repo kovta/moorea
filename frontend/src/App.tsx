@@ -6,6 +6,14 @@ import LandingPage from './pages/LandingPage';
 import SavedMoodboards from './pages/SavedMoodboards';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 
+/**
+ * Main App component with React Router configuration
+ * Routes:
+ * - / -> Home (moodboard generator)
+ * - /waitlist -> LandingPage (waitlist signup)
+ * - /saved -> SavedMoodboards
+ * - /privacy -> PrivacyPolicy
+ */
 const App: React.FC = () => {
   return (
     <AuthProvider>
