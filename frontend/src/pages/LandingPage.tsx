@@ -33,7 +33,7 @@ const LandingPage: React.FC = () => {
             AI-powered moodboard generation for fashion lovers
           </p>
           <p className="text-base md:text-lg text-white/90 max-w-2xl mx-auto">
-            Upload your clothing photos and get instant aesthetic inspiration
+            Upload your clothing photos and get instant aesthetic classification and a moodboard that matches that style
           </p>
         </div>
 
