@@ -10,7 +10,14 @@ import {
   SavedMoodboard 
 } from '../types';
 
-const API_BASE = process.env.REACT_APP_API_URL || '/api/v1';
+// API_BASE should be the full base URL (e.g., https://railway-url.railway.app/api/v1)
+// If REACT_APP_API_URL is set, use it as-is (should include /api/v1)
+// Otherwise, use relative path for local development
+const API_BASE = process.env.REACT_APP_API_URL 
+  ? (process.env.REACT_APP_API_URL.endsWith('/api/v1') 
+      ? process.env.REACT_APP_API_URL 
+      : `${process.env.REACT_APP_API_URL}/api/v1`)
+  : '/api/v1';
 
 // Log the API base URL for debugging
 console.log('🔧 Environment check:', {
