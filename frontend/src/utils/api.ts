@@ -38,7 +38,8 @@ if (process.env.REACT_APP_API_URL) {
 console.log('🔧 Environment check:', {
   REACT_APP_API_URL: process.env.REACT_APP_API_URL,
   API_BASE: API_BASE,
-  NODE_ENV: process.env.NODE_ENV
+  NODE_ENV: process.env.NODE_ENV,
+  isAbsolute: API_BASE.startsWith('http')
 });
 
 const apiClient = axios.create({
