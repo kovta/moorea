@@ -56,20 +56,32 @@ export const uploadImage = async (file: File, pinterestConsent: boolean = false)
   formData.append('file', file);
   formData.append('pinterest_consent', pinterestConsent.toString());
   
-  console.log('🌐 Making POST request to:', `${API_BASE}/moodboard/generate`);
+  const fullUrl = `${API_BASE}/moodboard/generate`;
+  console.log('🌐 Making POST request to:', fullUrl);
+  console.log('🌐 Full request URL will be:', apiClient.defaults.baseURL ? `${apiClient.defaults.baseURL}/moodboard/generate` : fullUrl);
   
-  const response = await apiClient.post<MoodboardResponse>(
-    '/moodboard/generate',
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }
-  );
+  try {
+    const response = await apiClient.post<MoodboardResponse>(
+      '/moodboard/generate',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
 
-  console.log('📨 API Response:', response.status, response.data);
-  return response.data;
+    console.log('📨 API Response:', response.status, response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Upload error details:');
+    console.error('  - Error message:', error.message);
+    console.error('  - Request URL:', error.config?.url);
+    console.error('  - Full request URL:', error.config?.baseURL ? `${error.config.baseURL}${error.config.url}` : error.config?.url);
+    console.error('  - Status:', error.response?.status);
+    console.error('  - Response data:', error.response?.data);
+    throw error;
+  }
 };
 
 export const getJobStatus = async (jobId: string): Promise<JobStatusResponse> => {
