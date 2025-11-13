@@ -62,6 +62,10 @@ class MoodboardService:
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=100)
             
             # Store result
+            logger.info(f"📦 Storing moodboard result for job {job_id}")
+            logger.info(f"   Top aesthetics: {[a.name for a in top_aesthetics]}")
+            logger.info(f"   Final images count: {len(final_images)}")
+            
             result = MoodboardResult(
                 job_id=job_id,
                 status=JobStatus.COMPLETED,
@@ -72,7 +76,10 @@ class MoodboardService:
             )
             
             await job_service.store_job_result(job_id, result)
-            logger.info(f"Completed moodboard generation for job {job_id}")
+            logger.info(f"✅ Completed moodboard generation for job {job_id} with {len(final_images)} images")
+            
+            if len(final_images) == 0:
+                logger.error(f"❌ WARNING: Moodboard result has 0 images! This will only show the uploaded image.")
             
         except Exception as e:
             logger.error(f"Error processing moodboard for job {job_id}: {str(e)}")
@@ -395,14 +402,20 @@ class MoodboardService:
         """Re-rank candidates using CLIP similarity."""
         try:
             if not candidates:
+                logger.warning("⚠️ No candidates to rerank!")
                 return []
+            
+            logger.info(f"🔄 Re-ranking {len(candidates)} candidates using CLIP similarity")
             
             # Get original image embedding
             original_embedding = await clip_service.get_image_embedding(original_image)
+            logger.info(f"✅ Got original image embedding")
             
             # Calculate similarities for all candidates
             candidate_urls = [c.url for c in candidates]
+            logger.info(f"📊 Calculating similarity for {len(candidate_urls)} candidate URLs")
             similarities = await clip_service.batch_similarity(original_embedding, candidate_urls)
+            logger.info(f"✅ Got {len(similarities)} similarity scores")
             
             # Add similarity scores and sort by score
             scored_candidates = []
@@ -410,35 +423,53 @@ class MoodboardService:
                 candidate.similarity_score = similarity
                 scored_candidates.append(candidate)
             
+            # Log similarity score distribution
+            if scored_candidates:
+                scores = [c.similarity_score or 0 for c in scored_candidates]
+                logger.info(f"📊 Similarity scores - Min: {min(scores):.3f}, Max: {max(scores):.3f}, Avg: {sum(scores)/len(scores):.3f}")
+                logger.info(f"   Top 5 scores: {sorted(scores, reverse=True)[:5]}")
+            
             # Sort by similarity score (highest first)
             scored_candidates.sort(key=lambda x: x.similarity_score or 0, reverse=True)
             
-            # Filter by minimum similarity threshold (30% - lowered for speed)
-            MIN_SIMILARITY_THRESHOLD = 0.30
+            # Filter by minimum similarity threshold (lowered to 15% to be more inclusive)
+            MIN_SIMILARITY_THRESHOLD = 0.15
             filtered_candidates = [
                 candidate for candidate in scored_candidates 
                 if (candidate.similarity_score or 0) >= MIN_SIMILARITY_THRESHOLD
             ]
             
-            logger.info(f"Filtered {len(scored_candidates)} candidates to {len(filtered_candidates)} above {MIN_SIMILARITY_THRESHOLD} similarity")
+            logger.info(f"📊 Filtered {len(scored_candidates)} candidates to {len(filtered_candidates)} above {MIN_SIMILARITY_THRESHOLD} similarity")
             
             # Return filtered candidates (up to final moodboard size)
             if len(filtered_candidates) >= 3:  # Need at least 3 good matches
                 final_count = min(len(filtered_candidates), settings.final_moodboard_size)
+                logger.info(f"✅ Returning {final_count} filtered candidates")
                 return filtered_candidates[:final_count]
             else:
-                # Fallback: if too few high-quality matches, lower threshold to 20%
-                logger.warning(f"Only {len(filtered_candidates)} high-quality matches, using 20% threshold")
+                # Fallback: if too few high-quality matches, lower threshold to 10%
+                logger.warning(f"⚠️ Only {len(filtered_candidates)} high-quality matches, using 10% threshold")
                 fallback_candidates = [
                     candidate for candidate in scored_candidates 
-                    if (candidate.similarity_score or 0) >= 0.20
+                    if (candidate.similarity_score or 0) >= 0.10
                 ]
-                final_count = min(len(fallback_candidates), settings.final_moodboard_size)
-                return fallback_candidates[:final_count]
+                if len(fallback_candidates) >= 3:
+                    final_count = min(len(fallback_candidates), settings.final_moodboard_size)
+                    logger.info(f"✅ Returning {final_count} fallback candidates (10% threshold)")
+                    return fallback_candidates[:final_count]
+                else:
+                    # Final fallback: return top candidates regardless of similarity
+                    logger.warning(f"⚠️ Very few matches even at 10%, returning top {settings.final_moodboard_size} candidates")
+                    final_count = min(len(scored_candidates), settings.final_moodboard_size)
+                    return scored_candidates[:final_count]
             
         except Exception as e:
-            logger.error(f"Error in candidate re-ranking: {str(e)}")
+            logger.error(f"❌ Error in candidate re-ranking: {str(e)}")
+            logger.error(f"   Exception type: {type(e).__name__}")
+            import traceback
+            logger.error(f"   Traceback: {traceback.format_exc()}")
             # Fallback: return first N candidates without scoring
+            logger.warning(f"⚠️ Returning {min(len(candidates), settings.final_moodboard_size)} candidates without similarity scoring")
             return candidates[:settings.final_moodboard_size]
 
     async def _apply_classification_filters(self, image_content: bytes, all_scores: List[AestheticScore]) -> List[AestheticScore]:
