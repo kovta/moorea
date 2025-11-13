@@ -306,13 +306,28 @@ class MoodboardService:
         top_keywords = keywords[:3]  # Reduced to 3 keywords for speed
         images_per_keyword = max(2, settings.max_candidates // len(top_keywords)) if top_keywords else 4
         
-        # ⚡ Use Unsplash + Pinterest (if consented) for speed
+        logger.info(f"🔍 Fetching images for keywords: {top_keywords}")
+        logger.info(f"   Images per keyword: {images_per_keyword}")
+        logger.info(f"   Unsplash API key configured: {bool(settings.unsplash_access_key)}")
+        logger.info(f"   Pexels API key configured: {bool(settings.pexels_api_key)}")
+        logger.info(f"   Pinterest consent: {pinterest_consent}")
+        
+        # ⚡ Use multiple APIs with fallback: Unsplash → Pexels → Pinterest
         all_tasks = []
         for keyword in top_keywords:
-            # Always use Unsplash for speed
-            tasks = [
-                unsplash_client.search_photos(keyword, per_page=images_per_keyword)
-            ]
+            tasks = []
+            
+            # Always try Unsplash first
+            if settings.unsplash_access_key:
+                tasks.append(unsplash_client.search_photos(keyword, per_page=images_per_keyword))
+            else:
+                logger.warning(f"⚠️ Unsplash API key not configured, skipping Unsplash for '{keyword}'")
+            
+            # Try Pexels as fallback
+            if settings.pexels_api_key:
+                tasks.append(pexels_client.search_photos(keyword, per_page=images_per_keyword))
+            else:
+                logger.warning(f"⚠️ Pexels API key not configured, skipping Pexels for '{keyword}'")
             
             # Add Pinterest if user consented and client is available
             if pinterest_consent and pinterest_client:
@@ -321,24 +336,42 @@ class MoodboardService:
             all_tasks.extend(tasks)
         
         # Execute all API calls concurrently with shorter timeout
-        api_count = 1 + (1 if pinterest_consent and pinterest_client else 0)
+        api_count = sum([
+            bool(settings.unsplash_access_key),
+            bool(settings.pexels_api_key),
+            bool(pinterest_consent and pinterest_client)
+        ])
         logger.info(f"⚡ SPEED MODE: Fetching from {api_count} API(s) for {len(top_keywords)} keywords ({len(all_tasks)} total requests)")
+        
+        if not all_tasks:
+            logger.error("❌ No API keys configured! Cannot fetch images. Please set UNSPLASH_ACCESS_KEY or PEXELS_API_KEY in Railway.")
+            return []
         
         try:
             # Use asyncio.wait_for with shorter timeout for speed
             results = await asyncio.wait_for(
                 asyncio.gather(*all_tasks, return_exceptions=True),
-                timeout=3.0  # Reduced to 3 seconds for speed
+                timeout=5.0  # Increased to 5 seconds to allow more time
             )
             
-            for result in results:
+            successful_count = 0
+            failed_count = 0
+            for i, result in enumerate(results):
                 if isinstance(result, list):  # Successful result
                     all_candidates.extend(result)
-                elif not isinstance(result, asyncio.TimeoutError):
-                    logger.warning(f"API call failed: {result}")
+                    successful_count += 1
+                    logger.info(f"✅ API call {i+1} succeeded: {len(result)} images")
+                elif isinstance(result, Exception):
+                    failed_count += 1
+                    logger.warning(f"❌ API call {i+1} failed: {type(result).__name__}: {result}")
+                else:
+                    failed_count += 1
+                    logger.warning(f"❌ API call {i+1} returned unexpected type: {type(result)}")
+            
+            logger.info(f"📊 API Results: {successful_count} succeeded, {failed_count} failed, {len(all_candidates)} total images fetched")
                     
         except asyncio.TimeoutError:
-            logger.warning("⚠️ API calls timed out after 3 seconds, using partial results")
+            logger.warning("⚠️ API calls timed out after 5 seconds, using partial results")
         
         # Remove duplicates by URL and limit total
         seen_urls = set()
@@ -351,6 +384,10 @@ class MoodboardService:
                     break
         
         logger.info(f"⚡ Fast fetch: {len(unique_candidates)} unique candidates (target: {settings.max_candidates})")
+        
+        if not unique_candidates:
+            logger.error("❌ No image candidates found! Check API keys and network connectivity.")
+        
         return unique_candidates
     
     async def _rerank_candidates(self, original_image: bytes, 
