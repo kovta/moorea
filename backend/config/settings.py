@@ -46,43 +46,51 @@ class Settings(BaseSettings):
     max_candidates: int = 20  # Reduced for faster processing
     final_moodboard_size: int = 12  # Reduced for faster generation
     
-    # File paths - computed dynamically to handle both local and Railway deployments
-    @staticmethod
-    def _get_data_dir() -> Path:
-        """Find the data directory, checking backend/ first (Railway), then repo root (local dev)."""
+    # File paths - will be computed in __init__
+    data_dir: Optional[Path] = None
+    project_root: Optional[Path] = None
+    cache_dir: Optional[Path] = None
+    aesthetics_file: Optional[Path] = None
+    
+    def model_post_init(self, __context) -> None:
+        """Compute file paths after model initialization."""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Find the data directory, checking backend/ first (Railway), then repo root (local dev)
         current_file = Path(__file__)  # config/settings.py
         backend_dir = current_file.parent.parent  # backend/
         repo_root = backend_dir.parent  # repo root
         
+        logger.info(f"🔍 Looking for aesthetics.yaml file...")
+        logger.info(f"   Current file: {current_file}")
+        logger.info(f"   Backend dir: {backend_dir}")
+        logger.info(f"   Repo root: {repo_root}")
+        logger.info(f"   Checking backend/data/: {(backend_dir / 'data' / 'aesthetics.yaml').exists()}")
+        logger.info(f"   Checking repo_root/data/: {(repo_root / 'data' / 'aesthetics.yaml').exists()}")
+        
         # Check if data/ exists in backend directory (Railway structure - preferred)
-        if (backend_dir / "data" / "aesthetics.yaml").exists():
-            return backend_dir / "data"
+        backend_data_path = backend_dir / "data" / "aesthetics.yaml"
+        if backend_data_path.exists():
+            self.data_dir = backend_dir / "data"
+            logger.info(f"✅ Found aesthetics.yaml in backend/data/: {backend_data_path}")
         # Fallback: check if data/ exists in parent directory (repo root structure)
         elif (repo_root / "data" / "aesthetics.yaml").exists():
-            return repo_root / "data"
-        # Final fallback: use backend directory (will create if needed)
+            self.data_dir = repo_root / "data"
+            logger.info(f"✅ Found aesthetics.yaml in repo root/data/: {repo_root / 'data' / 'aesthetics.yaml'}")
+        # Final fallback: use backend directory
         else:
-            return backend_dir / "data"
-    
-    @property
-    def data_dir(self) -> Path:
-        """Get the data directory path."""
-        return self._get_data_dir()
-    
-    @property
-    def project_root(self) -> Path:
-        """Get the project root directory."""
-        return self.data_dir.parent
-    
-    @property
-    def cache_dir(self) -> Path:
-        """Get the cache directory path."""
-        return self.project_root / "cache"
-    
-    @property
-    def aesthetics_file(self) -> Path:
-        """Get the aesthetics YAML file path."""
-        return self.data_dir / "aesthetics.yaml"
+            self.data_dir = backend_dir / "data"
+            logger.warning(f"⚠️  aesthetics.yaml not found, using fallback path: {self.data_dir / 'aesthetics.yaml'}")
+        
+        self.project_root = self.data_dir.parent
+        self.cache_dir = self.project_root / "cache"
+        self.aesthetics_file = self.data_dir / "aesthetics.yaml"
+        
+        logger.info(f"📁 Final paths:")
+        logger.info(f"   data_dir: {self.data_dir}")
+        logger.info(f"   aesthetics_file: {self.aesthetics_file}")
+        logger.info(f"   aesthetics_file exists: {self.aesthetics_file.exists()}")
     
     # Cache settings
     classification_cache_ttl: int = 86400 * 7  # 7 days

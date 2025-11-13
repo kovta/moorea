@@ -27,13 +27,26 @@ class AestheticService:
     
     async def _load_aesthetics_data(self):
         """Load aesthetics data from YAML file."""
+        aesthetics_file_path = settings.aesthetics_file
+        if aesthetics_file_path is None:
+            logger.error("❌ settings.aesthetics_file is None! Path resolution failed.")
+            raise FileNotFoundError("Aesthetics file path is not configured")
+        
+        logger.info(f"📂 Attempting to load aesthetics from: {aesthetics_file_path}")
+        logger.info(f"   File exists: {aesthetics_file_path.exists()}")
+        logger.info(f"   Absolute path: {aesthetics_file_path.absolute()}")
+        
         try:
-            with open(settings.aesthetics_file, 'r', encoding='utf-8') as file:
+            with open(aesthetics_file_path, 'r', encoding='utf-8') as file:
                 data = yaml.safe_load(file)
                 self._aesthetics_data = data.get('aesthetics', {})
                 self._vocabulary = list(self._aesthetics_data.keys())
-        except FileNotFoundError:
-            logger.error(f"Aesthetics file not found: {settings.aesthetics_file}")
+                logger.info(f"✅ Successfully loaded {len(self._vocabulary)} aesthetic terms")
+        except FileNotFoundError as e:
+            logger.error(f"❌ Aesthetics file not found: {aesthetics_file_path}")
+            logger.error(f"   Absolute path: {aesthetics_file_path.absolute()}")
+            logger.error(f"   Parent directory exists: {aesthetics_file_path.parent.exists()}")
+            logger.error(f"   Parent directory contents: {list(aesthetics_file_path.parent.iterdir()) if aesthetics_file_path.parent.exists() else 'N/A'}")
             raise
         except yaml.YAMLError as e:
             logger.error(f"Error parsing aesthetics YAML: {str(e)}")
