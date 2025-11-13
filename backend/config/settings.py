@@ -46,11 +46,43 @@ class Settings(BaseSettings):
     max_candidates: int = 20  # Reduced for faster processing
     final_moodboard_size: int = 12  # Reduced for faster generation
     
-    # File paths
-    project_root: Path = Path(__file__).parent.parent.parent
-    data_dir: Path = project_root / "data"
-    cache_dir: Path = project_root / "cache"
-    aesthetics_file: Path = data_dir / "aesthetics.yaml"
+    # File paths - computed dynamically to handle both local and Railway deployments
+    @staticmethod
+    def _get_data_dir() -> Path:
+        """Find the data directory, checking backend/ first (Railway), then repo root (local dev)."""
+        current_file = Path(__file__)  # config/settings.py
+        backend_dir = current_file.parent.parent  # backend/
+        repo_root = backend_dir.parent  # repo root
+        
+        # Check if data/ exists in backend directory (Railway structure - preferred)
+        if (backend_dir / "data" / "aesthetics.yaml").exists():
+            return backend_dir / "data"
+        # Fallback: check if data/ exists in parent directory (repo root structure)
+        elif (repo_root / "data" / "aesthetics.yaml").exists():
+            return repo_root / "data"
+        # Final fallback: use backend directory (will create if needed)
+        else:
+            return backend_dir / "data"
+    
+    @property
+    def data_dir(self) -> Path:
+        """Get the data directory path."""
+        return self._get_data_dir()
+    
+    @property
+    def project_root(self) -> Path:
+        """Get the project root directory."""
+        return self.data_dir.parent
+    
+    @property
+    def cache_dir(self) -> Path:
+        """Get the cache directory path."""
+        return self.project_root / "cache"
+    
+    @property
+    def aesthetics_file(self) -> Path:
+        """Get the aesthetics YAML file path."""
+        return self.data_dir / "aesthetics.yaml"
     
     # Cache settings
     classification_cache_ttl: int = 86400 * 7  # 7 days
