@@ -46,23 +46,30 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
       {/* Dominant Aesthetic Header */}
       {dominantAesthetic && (
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-100 to-pink-100 px-6 py-3 rounded-full mb-4">
-            <span className="text-2xl">✨</span>
-            <div>
-              <h2 className="text-lg font-semibold text-purple-800 capitalize">
-                {dominantAesthetic.name.replace('_', ' ')} Vibes
-              </h2>
-              <p className="text-sm text-purple-600">
-                {Math.round(dominantAesthetic.score * 100)}% match
-              </p>
+          <div 
+            className="inline-flex flex-col items-center gap-2 px-6 py-4 rounded-full mb-4"
+            style={{
+              background: 'linear-gradient(135deg, #FFACAC 0%, #FFBFA9 50%, #FFEBB4 100%)'
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">✨</span>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800 capitalize">
+                  {dominantAesthetic.name.replace('_', ' ')} Vibes
+                </h2>
+                <p className="text-sm text-gray-700 font-medium">
+                  {Math.round(dominantAesthetic.score * 100)}% match
+                </p>
+              </div>
             </div>
+            
+            {dominantAesthetic.description && (
+              <p className="text-gray-700 max-w-2xl mx-auto text-sm font-medium">
+                {dominantAesthetic.description}
+              </p>
+            )}
           </div>
-          
-          {dominantAesthetic.description && (
-            <p className="text-gray-600 max-w-2xl mx-auto text-sm">
-              {dominantAesthetic.description}
-            </p>
-          )}
         </div>
       )}
 
