@@ -43,11 +43,11 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
 
   return (
     <div className="w-full animate-fade-in">
-      {/* Dominant Aesthetic Header */}
+      {/* Dominant Aesthetic Header - Always uses website color palette */}
       {dominantAesthetic && (
         <div className="text-center mb-8">
           <div 
-            className="inline-flex flex-col items-center gap-2 px-6 py-4 rounded-full mb-4"
+            className="inline-flex flex-col items-center gap-2 px-6 py-4 rounded-full mb-4 shadow-md"
             style={{
               background: 'linear-gradient(135deg, #FFACAC 0%, #FFBFA9 50%, #FFEBB4 100%)'
             }}
@@ -56,7 +56,7 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
               <span className="text-2xl">✨</span>
               <div>
                 <h2 className="text-lg font-semibold text-gray-800 capitalize">
-                  {dominantAesthetic.name.replace('_', ' ')} Vibes
+                  {dominantAesthetic.name.replace(/_/g, ' ')} Vibes
                 </h2>
                 <p className="text-sm text-gray-700 font-medium">
                   {Math.round(dominantAesthetic.score * 100)}% match
