@@ -145,15 +145,11 @@ const Home: React.FC = () => {
                      Moorea
                    </h1>
                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-semibold text-white mb-6 drop-shadow-lg">
-                     Daily personalised moodboard based on your own aesthetic
+                     Hello, inspire me today!
                    </h2>
                  </div>
             <p className="text-lg md:text-xl lg:text-2xl text-white font-medium max-w-2xl mx-auto leading-relaxed px-4">
-              Drop your clothing pic and watch the magic happen ✨
-              <br className="hidden sm:block"/>
-              <span className="block sm:inline text-base md:text-lg text-white mt-1 sm:mt-0">
-                We'll find your aesthetic & create the perfect moodboard
-              </span>
+              Daily personalised moodboard based on your own aesthetic
             </p>
           </div>
         )}
