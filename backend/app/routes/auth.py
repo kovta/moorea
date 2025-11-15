@@ -14,6 +14,8 @@ from services.auth_service import (
     verify_token, get_user_by_username, get_user_by_email,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from services.recaptcha_service import recaptcha_service
+from fastapi import Request
 
 router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 
@@ -25,6 +27,7 @@ class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
+    recaptcha_token: Optional[str] = None
 
 class UserResponse(BaseModel):
     id: int
@@ -65,8 +68,26 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     return user
 
 @router.post("/register", response_model=UserResponse)
-async def register(user_data: UserCreate, db: Session = Depends(get_db)):
+async def register(user_data: UserCreate, request: Request, db: Session = Depends(get_db)):
     """Register a new user."""
+    # Verify reCAPTCHA token
+    if user_data.recaptcha_token:
+        client_ip = request.client.host if request.client else None
+        is_valid = await recaptcha_service.verify_token(user_data.recaptcha_token, client_ip)
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="reCAPTCHA verification failed. Please try again."
+            )
+    else:
+        # If reCAPTCHA is configured but token is missing, reject
+        from config import settings
+        if settings.recaptcha_secret_key:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="reCAPTCHA verification required"
+            )
+    
     # Check if username already exists
     if get_user_by_username(db, user_data.username):
         raise HTTPException(
@@ -86,8 +107,39 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     return user
 
 @router.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(), 
+    request: Request = None,
+    db: Session = Depends(get_db)
+):
     """Login user and return access token."""
+    # Get reCAPTCHA token from request form data
+    recaptcha_token = None
+    if request:
+        try:
+            form_body = await request.form()
+            recaptcha_token = form_body.get("recaptcha_token")
+        except Exception:
+            pass
+    
+    # Verify reCAPTCHA token if provided
+    if recaptcha_token:
+        client_ip = request.client.host if request and request.client else None
+        is_valid = await recaptcha_service.verify_token(recaptcha_token, client_ip)
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="reCAPTCHA verification failed. Please try again."
+            )
+    else:
+        # If reCAPTCHA is configured but token is missing, reject
+        from config import settings
+        if settings.recaptcha_secret_key:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="reCAPTCHA verification required"
+            )
+    
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(

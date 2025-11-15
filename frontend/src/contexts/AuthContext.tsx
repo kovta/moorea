@@ -56,8 +56,8 @@ const initialState: AuthState = {
 
 // Context
 interface AuthContextType extends AuthState {
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (credentials: RegisterCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials, recaptchaToken?: string | null) => Promise<void>;
+  register: (credentials: RegisterCredentials, recaptchaToken?: string | null) => Promise<void>;
   logout: () => void;
 }
 
@@ -93,10 +93,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = async (credentials: LoginCredentials, recaptchaToken?: string | null) => {
     dispatch({ type: 'AUTH_START' });
     try {
-      const authResponse = await loginUser(credentials);
+      const authResponse = await loginUser(credentials, recaptchaToken);
       const user = await getCurrentUser(authResponse.access_token);
       
       // Store token in localStorage
@@ -112,12 +112,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (credentials: RegisterCredentials) => {
+  const register = async (credentials: RegisterCredentials, recaptchaToken?: string | null) => {
     dispatch({ type: 'AUTH_START' });
     try {
-      const user = await registerUser(credentials);
+      const user = await registerUser(credentials, recaptchaToken);
       
-      // Auto-login after registration
+      // Auto-login after registration (reCAPTCHA not needed for auto-login)
       const authResponse = await loginUser({
         username: credentials.username,
         password: credentials.password,

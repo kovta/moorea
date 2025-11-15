@@ -24,3 +24,5 @@ curl -X POST https://YOUR_RAILWAY_URL.railway.app/api/v1/waitlist/subscribe \
 - Check if the service is running
 - Check Railway logs
 
+
+

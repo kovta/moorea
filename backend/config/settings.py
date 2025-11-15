@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     # Pinterest API
     pinterest_access_token: Optional[str] = None
     
+    # reCAPTCHA
+    recaptcha_secret_key: Optional[str] = None
+    
     # ML Model settings - Optimized for speed with more images
     clip_model_name: str = "RN50"  # Faster ResNet-50 model vs ViT-B/32
     clip_backend: str = "fashion"

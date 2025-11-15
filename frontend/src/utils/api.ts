@@ -104,15 +104,22 @@ export const getAesthetics = async () => {
 };
 
 // Authentication API functions
-export const registerUser = async (credentials: RegisterCredentials): Promise<User> => {
-  const response = await apiClient.post<User>('/auth/register', credentials);
+export const registerUser = async (credentials: RegisterCredentials, recaptchaToken?: string | null): Promise<User> => {
+  const payload: any = { ...credentials };
+  if (recaptchaToken) {
+    payload.recaptcha_token = recaptchaToken;
+  }
+  const response = await apiClient.post<User>('/auth/register', payload);
   return response.data;
 };
 
-export const loginUser = async (credentials: LoginCredentials): Promise<AuthResponse> => {
+export const loginUser = async (credentials: LoginCredentials, recaptchaToken?: string | null): Promise<AuthResponse> => {
   const formData = new FormData();
   formData.append('username', credentials.username);
   formData.append('password', credentials.password);
+  if (recaptchaToken) {
+    formData.append('recaptcha_token', recaptchaToken);
+  }
   
   const response = await apiClient.post<AuthResponse>('/auth/login', formData, {
     headers: {
