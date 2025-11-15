@@ -145,7 +145,7 @@ const Home: React.FC = () => {
                      Moorea
                    </h1>
                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-semibold text-white mb-6 drop-shadow-lg">
-                     Hello, inspire me today!
+                     Daily personalised moodboard based on your own aesthetic
                    </h2>
                  </div>
             <p className="text-lg md:text-xl lg:text-2xl text-white font-medium max-w-2xl mx-auto leading-relaxed px-4">
