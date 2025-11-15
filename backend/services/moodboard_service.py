@@ -528,6 +528,32 @@ class MoodboardService:
                             old_money_score.score *= 1.6  # Boost old money for boots
                             logger.info(f"🔧 BOOT FILTER: Boosted old_money score to {old_money_score.score:.3f}")
             
+            # Filter 2: Fix cozy sweater misclassification (quiet_luxury vs hygge/cozycore)
+            if "quiet_luxury" in top_aesthetics:
+                cozy_sweater_keywords = ["patterned sweater", "knit sweater", "cozy sweater", "warm knitwear", "comfortable sweater", "soft textures"]
+                cozy_sweater_scores = await clip_service.classify_aesthetics(image_content, cozy_sweater_keywords)
+                max_cozy_score = max([score.score for score in cozy_sweater_scores]) if cozy_sweater_scores else 0
+                
+                if max_cozy_score > 0.25:  # 25% confidence threshold for cozy sweater elements
+                    logger.info(f"🧶 COZY SWEATER DETECTED: {max_cozy_score:.3f} confidence")
+                    
+                    # Reduce quiet_luxury score for cozy/patterned items
+                    quiet_luxury_score = next((score for score in all_scores if score.name == "quiet_luxury"), None)
+                    if quiet_luxury_score and quiet_luxury_score.score > 0.1:
+                        quiet_luxury_score.score *= 0.3  # Reduce quiet_luxury by 70%
+                        logger.info(f"🔧 COZY SWEATER FILTER: Reduced quiet_luxury score to {quiet_luxury_score.score:.3f}")
+                    
+                    # Boost hygge and cozycore for cozy sweaters
+                    hygge_score = next((score for score in all_scores if score.name == "hygge"), None)
+                    cozycore_score = next((score for score in all_scores if score.name == "cozycore"), None)
+                    
+                    if hygge_score:
+                        hygge_score.score *= 2.5  # Boost hygge for cozy sweaters
+                        logger.info(f"🔧 COZY SWEATER FILTER: Boosted hygge score to {hygge_score.score:.3f}")
+                    if cozycore_score:
+                        cozycore_score.score *= 2.5  # Boost cozycore for cozy sweaters
+                        logger.info(f"🔧 COZY SWEATER FILTER: Boosted cozycore score to {cozycore_score.score:.3f}")
+            
             # Re-sort scores after filtering
             all_scores.sort(key=lambda x: x.score, reverse=True)
             

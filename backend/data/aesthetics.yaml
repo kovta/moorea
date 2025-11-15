@@ -285,11 +285,11 @@ aesthetics:
 
   # Comfort and Cozy Aesthetics
   hygge:
-    keywords: ["cozy blanket", "warm fireplace", "comfort food", "soft lighting", "peaceful atmosphere", "danish lifestyle"]
+    keywords: ["cozy blanket", "warm fireplace", "comfort food", "soft lighting", "peaceful atmosphere", "danish lifestyle", "knit sweater", "patterned sweater", "warm knitwear", "cozy sweater", "comfortable sweater", "soft textures", "warm clothing"]
     description: "Danish cozy comfort lifestyle focused on wellbeing and warmth"
   
   cozycore:
-    keywords: ["warm sweater", "hot cocoa", "soft blanket", "reading nook", "comfortable home", "peaceful vibes"]
+    keywords: ["warm sweater", "hot cocoa", "soft blanket", "reading nook", "comfortable home", "peaceful vibes", "knit sweater", "patterned sweater", "cozy knitwear", "comfortable clothing", "soft fabrics", "warm textures"]
     description: "Ultimate comfort and cozy home living aesthetic"
   
   sleepcore:
@@ -312,6 +312,7 @@ aesthetics:
   # Luxury and High Fashion
   quiet_luxury:
     keywords: ["understated elegance", "quality fabrics", "minimal branding", "timeless design", "sophisticated style", "stealth wealth"]
+    negative_keywords: ["patterned sweater", "cozy sweater", "knit pattern", "warm knitwear", "casual comfort", "cozy clothing"]
     description: "Understated luxury without obvious logos or branding"
   
   the_row:
