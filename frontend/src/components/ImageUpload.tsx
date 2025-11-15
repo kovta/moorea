@@ -151,7 +151,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) 
             </div>
           </div>
 
-          {/* Pinterest Consent Checkbox */}
+          {/* Pinterest Consent Checkbox - TEMPORARILY HIDDEN
+              TODO: Re-enable after Pinterest API approval to avoid branding issues
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-start gap-3">
               <input
@@ -171,6 +172,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) 
               </div>
             </div>
           </div>
+          */}
         </div>
       )}
 
