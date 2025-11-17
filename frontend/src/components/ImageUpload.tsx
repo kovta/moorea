@@ -151,28 +151,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) 
             </div>
           </div>
 
-          {/* Pinterest Consent Checkbox - TEMPORARILY HIDDEN
-              TODO: Re-enable after Pinterest API approval to avoid branding issues
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                id="pinterest-consent"
-                checked={pinterestConsent}
-                onChange={(e) => setPinterestConsent(e.target.checked)}
-                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <div className="text-sm">
-                <label htmlFor="pinterest-consent" className="font-medium text-blue-900 cursor-pointer">
-                  📌 Include Pinterest content in my moodboard
-                </label>
-                <p className="text-blue-700 mt-1">
-                  I consent to Pinterest images being included in my moodboard. Pinterest content will be properly attributed and linked back to Pinterest.
-                </p>
-              </div>
-            </div>
-          </div>
-          */}
+          {/* Pinterest consent checkbox removed to avoid branding issues during API approval */}
         </div>
       )}
 
