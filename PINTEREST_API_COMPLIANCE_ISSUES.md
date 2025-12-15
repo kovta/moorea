@@ -7,27 +7,35 @@
 
 ## 🚨 Critical Issues (Must Fix Before Application)
 
-### 1. **Data Storage Violation** - HIGHEST PRIORITY
-**Issue**: Storing Pinterest data violates Pinterest's core policy: *"You may not store any information accessed through any Pinterest Materials, including the API."*
+### 1. **Data Storage - CLARIFICATION NEEDED** - MEDIUM PRIORITY
+**Issue**: Need to verify what Pinterest allows storing for attribution purposes.
 
-**Current Violations**:
-- ✅ **Cache Service** (`services/cache_service.py`): Caches Pinterest URLs and metadata with 1-hour TTL
-- ✅ **Database Storage**: When users save moodboards, Pinterest URLs are stored in database
-- ✅ **Moodboard Results**: Pinterest pin URLs, board names, and metadata are stored in response objects
+**Current Implementation**:
+- ✅ **Pinterest Client** (`services/pinterest_client.py`): Does NOT use cache - calls API directly each time ✅
+- ✅ **Database Storage**: Stores `pinterest_url` and `pinterest_board` when users save moodboards
+- ✅ **Moodboard Results**: Pinterest pin URLs stored for linking back to original pins
 
 **Pinterest Policy**:
 > "Except for campaign analytics information accessed about your account, you may not store any information accessed through any Pinterest Materials, including the API. Instead, call the API each time you need to access information."
 
-**Required Fixes**:
-1. **Remove Pinterest from cache entirely** - No caching of Pinterest data, even with TTL
-2. **Don't store Pinterest URLs in database** - When saving moodboards, exclude Pinterest images or only store a flag that Pinterest was used
-3. **Call API each time** - Always fetch Pinterest content fresh, never from cache or database
+**Key Distinction**:
+- ❌ **Violation**: Caching raw API responses, storing API response data structures
+- ✅ **Likely Required**: Storing pin URLs (`pinterest_url`) for attribution and linking back to original pins
+- ❓ **Gray Area**: Storing board names and metadata for attribution
 
-**Code Changes Needed**:
-- `services/cache_service.py`: Exclude Pinterest data from all caches
-- `services/moodboard_service.py`: Don't cache Pinterest API responses
-- Database models: Don't persist Pinterest URLs/metadata
-- `app/routes/moodboard_save.py`: Filter out Pinterest data before saving
+**Current Status**:
+- ✅ Pinterest client does NOT cache (calls API fresh each time) - **COMPLIANT**
+- ✅ Pinterest URLs stored for attribution/linking - **LIKELY REQUIRED** (Pinterest requires linking back)
+- ❓ Need to verify if storing `pinterest_board` name is allowed
+
+**Required Verification**:
+1. **Confirm with Pinterest**: Is storing pin URLs for attribution/linking allowed?
+2. **Frontend Linking**: Ensure all Pinterest images link to `pinterest_url` (currently missing!)
+3. **Database Storage**: If storing URLs is allowed, ensure they're only used for attribution
+
+**Potential Fixes** (if needed):
+- If Pinterest confirms URLs can't be stored: Don't save Pinterest images in moodboards, or fetch fresh on display
+- Ensure frontend uses `pinterest_url` for clickable links (currently not implemented)
 
 ---
 
@@ -63,28 +71,31 @@
 
 ---
 
-### 3. **Attribution Requirements** - MEDIUM PRIORITY
-**Issue**: Pinterest images must be properly attributed and linked back to Pinterest.
+### 3. **Attribution Requirements - MISSING LINKS** - HIGH PRIORITY
+**Issue**: Pinterest images are NOT linked back to Pinterest, which is REQUIRED for compliance.
 
 **Current State**:
-- ✅ Pinterest URLs are stored (`pinterest_url`, `pinterest_board`)
-- ❓ Frontend may not be linking images back to Pinterest
-- ❓ Attribution may not be clear enough
+- ✅ Pinterest URLs are stored in backend (`pinterest_url`, `pinterest_board`)
+- ❌ **Frontend does NOT link images to Pinterest** - Images are not clickable
+- ❌ **No Pinterest attribution shown** - No indication images are from Pinterest
+- ❌ **Missing source links** - `pinterest_url` exists but is not used
 
 **Pinterest Requirement**:
-- All Pinterest content must link back to original pin
+- All Pinterest content MUST link back to original pin
 - Clear attribution showing content is from Pinterest
 - Don't obscure or cover Pinterest branding on images
 
-**Required Fixes**:
-1. **Ensure all Pinterest images are clickable** - Link to `pinterest_url`
-2. **Clear attribution** - Show "Image from Pinterest" or similar
-3. **Board attribution** - Show board name if available
-4. **No image modification** - Don't cover Pinterest watermarks/branding
+**Required Fixes** (CRITICAL):
+1. **Make Pinterest images clickable** - Wrap in `<a>` tag linking to `pinterest_url`
+2. **Show Pinterest attribution** - Display "📌 Image from Pinterest" or similar
+3. **Board attribution** - Show board name if available (`pinterest_board`)
+4. **Source indicator** - Add visual indicator for Pinterest images
 
-**Code to Verify**:
-- `frontend/src/components/MoodboardDisplay.tsx`: Check if Pinterest images link to `pinterest_url`
-- Ensure `pinterest_url` is used for clickable links
+**Code Changes Needed**:
+- `frontend/src/components/MoodboardDisplay.tsx`: 
+  - Wrap Pinterest images in clickable links
+  - Add Pinterest attribution in hover overlay
+  - Show `pinterest_url` link when `source_api === "pinterest"`
 
 ---
 
@@ -153,10 +164,10 @@
 ## 🎯 Action Plan
 
 ### Phase 1: Critical Fixes (Before Application)
-1. ✅ Remove Pinterest data from cache
-2. ✅ Remove Pinterest URLs from database storage
-3. ✅ Add generic consent mechanism (no Pinterest branding)
-4. ✅ Verify Pinterest attribution in UI
+1. ✅ **Verify Pinterest URL storage policy** - Confirm if storing `pinterest_url` for attribution is allowed
+2. ✅ **Add Pinterest image links** - Make all Pinterest images clickable, linking to `pinterest_url` (CRITICAL)
+3. ✅ **Add Pinterest attribution** - Show "Image from Pinterest" and board name in UI
+4. ✅ **Add generic consent mechanism** - Generic checkbox (no Pinterest branding)
 
 ### Phase 2: Documentation (Before Application)
 1. ✅ Update Privacy Policy with explicit "no storage" language
