@@ -380,8 +380,9 @@ If you have questions about this Privacy Policy or our data practices, please co
 ### 17.1 Pinterest Developer Guidelines Compliance
 We comply with Pinterest's Developer Guidelines by:
 ✅ Being honest and transparent about our Service functionality  
-✅ **NOT storing Pinterest content data** - We only store Pinterest URLs and attribution metadata  
-✅ **API calls only** - We call Pinterest API each time we need content, never storing Pinterest data  
+✅ **NO Pinterest data storage** - We do NOT store any Pinterest data (no URLs, no metadata, no content)  
+✅ **API calls only** - We call Pinterest API each time we need content, never storing or caching Pinterest data  
+✅ **Fresh data only** - All Pinterest content is retrieved fresh from API, never from cache or storage  
 ✅ Only accessing public Pinterest content  
 ✅ Not soliciting or collecting login credentials  
 ✅ Keeping API credentials private and secure  
