@@ -12,6 +12,11 @@ export interface ImageCandidate {
   photographer?: string;
   source_api: string;
   similarity_score?: number;
+  // Pinterest-specific fields
+  pinterest_url?: string;
+  pinterest_board?: string;
+  // Other source URLs
+  source_url?: string;
 }
 
 export enum JobStatus {

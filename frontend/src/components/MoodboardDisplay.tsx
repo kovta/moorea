@@ -67,55 +67,115 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
 
       {/* Moodboard Grid - Fixed 5 columns */}
       <div className="moodboard-grid mb-8">
-        {imagesToShow.map((image, index) => (
-          <div 
-            key={image.id}
-            className="group relative aspect-square overflow-hidden rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer animate-fade-in"
-            style={{ animationDelay: `${index * 0.05}s` }}
-          >
-            {/* Main Image */}
-            <img 
-              src={image.url} 
-              alt={`Moodboard inspiration ${index + 1}`}
-              loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            
-            {/* Overlay that appears on hover */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="absolute bottom-0 left-0 right-0 p-3">
-                {/* Photographer credit */}
-                {image.photographer && (
-                  <p className="text-white text-xs font-medium mb-1">
-                    📸 {image.photographer}
-                  </p>
-                )}
-                
-                {/* Similarity score */}
-                {image.similarity_score && (
-                  <div className="flex items-center gap-1">
-                    <div className="flex-1 bg-white/20 rounded-full h-1">
-                      <div 
-                        className="bg-white h-1 rounded-full transition-all duration-500"
-                        style={{ width: `${image.similarity_score * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-white text-xs">
-                      {Math.round(image.similarity_score * 100)}%
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
+        {imagesToShow.map((image, index) => {
+          // Determine if image should be clickable and what link to use
+          const isPinterest = image.source_api === 'pinterest';
+          const linkUrl = isPinterest && image.pinterest_url 
+            ? image.pinterest_url 
+            : image.source_url || image.url;
+          const shouldLink = isPinterest && image.pinterest_url;
 
-            {/* Corner indicator for high-match images */}
-            {image.similarity_score && image.similarity_score > 0.8 && (
-              <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs px-2 py-1 rounded-full font-medium shadow-md">
-                🔥 Hot match
+          // Image content component
+          const ImageContent = (
+            <>
+              {/* Main Image */}
+              <img 
+                src={image.url} 
+                alt={`Moodboard inspiration ${index + 1}`}
+                loading="lazy"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              
+              {/* Overlay that appears on hover */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                  {/* Source attribution - Pinterest */}
+                  {isPinterest && (
+                    <div className="mb-2">
+                      <p className="text-white text-xs font-semibold mb-0.5 flex items-center gap-1">
+                        📌 Image from Pinterest
+                      </p>
+                      {image.pinterest_board && (
+                        <p className="text-white/80 text-xs">
+                          Board: {image.pinterest_board}
+                        </p>
+                      )}
+                      {shouldLink && (
+                        <p className="text-white/70 text-xs mt-1 underline">
+                          Click to view on Pinterest →
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Photographer credit */}
+                  {image.photographer && (
+                    <p className="text-white text-xs font-medium mb-1">
+                      📸 {image.photographer}
+                    </p>
+                  )}
+                  
+                  {/* Similarity score */}
+                  {image.similarity_score && (
+                    <div className="flex items-center gap-1">
+                      <div className="flex-1 bg-white/20 rounded-full h-1">
+                        <div 
+                          className="bg-white h-1 rounded-full transition-all duration-500"
+                          style={{ width: `${image.similarity_score * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-white text-xs">
+                        {Math.round(image.similarity_score * 100)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* Corner indicator for high-match images */}
+              {image.similarity_score && image.similarity_score > 0.8 && (
+                <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs px-2 py-1 rounded-full font-medium shadow-md">
+                  🔥 Hot match
+                </div>
+              )}
+
+              {/* Pinterest indicator badge */}
+              {isPinterest && (
+                <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded font-medium shadow-md flex items-center gap-1">
+                  <span>📌</span>
+                  <span>Pinterest</span>
+                </div>
+              )}
+            </>
+          );
+
+          // Wrap in link if Pinterest image, otherwise regular div
+          if (shouldLink) {
+            return (
+              <a
+                key={image.id}
+                href={linkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative aspect-square overflow-hidden rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer animate-fade-in block"
+                style={{ animationDelay: `${index * 0.05}s` }}
+                title="View on Pinterest"
+              >
+                {ImageContent}
+              </a>
+            );
+          }
+
+          return (
+            <div 
+              key={image.id}
+              className="group relative aspect-square overflow-hidden rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer animate-fade-in"
+              style={{ animationDelay: `${index * 0.05}s` }}
+            >
+              {ImageContent}
+            </div>
+          );
+        })}
       </div>
 
       {/* Load More Section */}
