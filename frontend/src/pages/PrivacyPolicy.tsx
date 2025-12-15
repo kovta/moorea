@@ -75,11 +75,31 @@ const PrivacyPolicy: React.FC = () => {
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-3">Data Storage and Security</h2>
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-gray-700 leading-relaxed mb-4">
                 We use industry-standard security measures to protect your data. Your images and personal information 
                 are stored securely using encrypted databases and secure cloud storage. We do not share your personal 
                 information with third parties except as necessary to provide our service.
               </p>
+              
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 my-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Pinterest Data - No Storage Policy</h3>
+                <p className="text-gray-700 leading-relaxed mb-2">
+                  <strong>We do NOT store any Pinterest data.</strong> In compliance with Pinterest's Developer Guidelines, 
+                  we follow a strict "no storage" policy:
+                </p>
+                <ul className="list-disc list-inside text-gray-700 ml-4 space-y-1">
+                  <li>We call Pinterest API each time we need content - never from cache or stored data</li>
+                  <li>Pinterest data exists only temporarily in-memory during moodboard generation</li>
+                  <li>No Pinterest URLs, metadata, or content is stored in our database</li>
+                  <li>No Pinterest data is cached, even temporarily</li>
+                  <li>Pinterest images are excluded from saved moodboards</li>
+                  <li>All Pinterest data is discarded immediately after use</li>
+                </ul>
+                <p className="text-gray-700 leading-relaxed mt-2 text-sm">
+                  Pinterest content is used only for immediate display and linking back to original pins for attribution. 
+                  We never store, cache, or persist any information from Pinterest API.
+                </p>
+              </div>
             </section>
 
             <section>

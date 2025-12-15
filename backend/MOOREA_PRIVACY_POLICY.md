@@ -28,25 +28,39 @@ When you create an account or use our Service, we may collect:
   - The aesthetic classification detected by our AI
   - URLs to images from third-party sources (Unsplash, Pexels, Flickr, Pinterest)
   - Image metadata including photographer credits and source information
-  - **Important**: We store only Pinterest URLs and metadata, never the actual Pinterest images
+  - **Important**: For Pinterest content, we follow Pinterest's strict "no storage" policy (see section 1.4 below)
 
 ### 1.4 Pinterest API Data
-When using Pinterest integration, we access the following Pinterest API endpoints:
+**CRITICAL: Pinterest "No Storage" Policy Compliance**
+
+We strictly comply with Pinterest's Developer Guidelines requirement: **"You may not store any information accessed through any Pinterest Materials, including the API."**
+
+**What This Means:**
+- ✅ **We DO NOT store Pinterest data** - We do not cache, store, or persist any information from Pinterest API responses
+- ✅ **Fresh API calls only** - We call Pinterest API each time we need Pinterest content, never from cache or stored data
+- ✅ **No Pinterest data in database** - Pinterest URLs and metadata are NOT stored in our database
+- ✅ **No Pinterest data in cache** - Pinterest API responses are NOT cached, even temporarily
+
+**When Using Pinterest Integration:**
+We access the following Pinterest API endpoints:
 - **Pins API**: To search and retrieve Pinterest pins based on aesthetic keywords
 - **Boards API**: To access public board information for attribution
 - **User API**: To retrieve public user information for photographer credits
 
-**Data Retrieved from Pinterest API:**
-- Pin URLs and image URLs (publicly accessible)
-- Pin descriptions and titles (public content)
-- Board names and descriptions (public information)
-- User display names (public profile information)
-- Pin creation dates and engagement metrics (public data)
+**Data Retrieved from Pinterest API (Temporary, In-Memory Only):**
+- Pin URLs and image URLs (publicly accessible) - Used only during active moodboard generation
+- Pin descriptions and titles (public content) - Displayed temporarily, never stored
+- Board names and descriptions (public information) - Used for attribution, never stored
+- User display names (public profile information) - Used for attribution, never stored
 
-**Data Storage Policy:**
-- **We store ONLY**: Pinterest pin URLs, board names, and user display names for attribution
-- **We do NOT store**: Pinterest images, pin descriptions, or any Pinterest content data
-- **Compliance**: We call Pinterest API each time we need Pinterest content, following Pinterest's "no storage" requirement
+**What Happens to Pinterest Data:**
+1. **During Generation**: Pinterest data is retrieved from API and used temporarily in-memory
+2. **For Attribution**: Pin URLs are included in the response to enable linking back to Pinterest (required for compliance)
+3. **After Generation**: All Pinterest data is discarded - nothing is stored, cached, or persisted
+4. **If User Saves Moodboard**: Pinterest images are excluded from saved moodboards to comply with "no storage" policy
+
+**Compliance Statement:**
+We call Pinterest API each time we need Pinterest content. We do not store, cache, or persist any Pinterest data. Pinterest content is used only for immediate display and linking back to original pins for attribution purposes.
 
 **Data NOT Retrieved:**
 - Private pins or boards
@@ -292,10 +306,12 @@ We ensure appropriate safeguards for international data transfers through:
 
 ### 10.3 Pinterest API Data Transfers
 When using Pinterest integration:
-- **No Pinterest Data Storage**: We do not store Pinterest content data, only URLs and attribution metadata
-- **API Calls Only**: We call Pinterest API each time we need content, following Pinterest's "no storage" requirement
-- **Attribution Metadata**: Only Pinterest pin URLs, board names, and user display names are stored for attribution
+- **NO Pinterest Data Storage**: We do NOT store any Pinterest data - no URLs, no metadata, no content
+- **API Calls Only**: We call Pinterest API each time we need content, following Pinterest's strict "no storage" requirement
+- **Temporary Use Only**: Pinterest data exists only in-memory during active moodboard generation
+- **No Persistence**: Pinterest data is discarded immediately after use - nothing is saved to database, cache, or any storage
 - **No Content Transfer**: Pinterest images and content remain hosted by Pinterest and are not transferred to our servers
+- **Saved Moodboards**: Pinterest images are excluded from saved moodboards to maintain compliance
 
 ### 10.4 Your Rights Regarding Transfers
 You have the right to:
