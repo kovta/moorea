@@ -145,3 +145,4 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onClose }) =>
 };
 
 export default LoginForm;
+

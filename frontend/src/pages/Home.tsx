@@ -142,14 +142,11 @@ const Home: React.FC = () => {
                  <div className="mb-6">
                    <span className="text-5xl md:text-6xl mb-4 block animate-bounce-slow">✨</span>
                    <h1 className="text-4xl sm:text-5xl md:text-7xl font-display font-bold text-white mb-2 drop-shadow-lg">
-                     Moorea
+                     Moorea, the perfect moodboard.
                    </h1>
-                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-semibold text-white mb-6 drop-shadow-lg">
-                     Hello, inspire me today!
-                   </h2>
                  </div>
             <p className="text-lg md:text-xl lg:text-2xl text-white font-medium max-w-2xl mx-auto leading-relaxed px-4">
-              Daily personalised moodboard based on your own aesthetic
+              Upload your photo and we will help you find the aesthetic and how to style it.
             </p>
           </div>
         )}
@@ -178,16 +175,18 @@ const Home: React.FC = () => {
                 isUploading={false}
               />
               
-              {/* Fun helper text */}
+              {/* Most common aesthetics */}
               <div className="mt-8 text-center">
                 <p className="text-gray-600 text-sm mb-3">
-                  💡 <strong>Pro tip:</strong> The clearer your photo, the better your moodboard!
+                  Most common aesthetics:
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 text-xs text-gray-500">
-                  <span className="bg-gray-100 px-3 py-1 rounded-full">Vintage tees</span>
-                  <span className="bg-gray-100 px-3 py-1 rounded-full">Elegant dresses</span>
-                  <span className="bg-gray-100 px-3 py-1 rounded-full">Street style</span>
-                  <span className="bg-gray-100 px-3 py-1 rounded-full">Cozy sweaters</span>
+                  <span className="bg-gray-100 px-3 py-1 rounded-full">Cottagecore</span>
+                  <span className="bg-gray-100 px-3 py-1 rounded-full">Dark Academia</span>
+                  <span className="bg-gray-100 px-3 py-1 rounded-full">Minimalist</span>
+                  <span className="bg-gray-100 px-3 py-1 rounded-full">Y2K</span>
+                  <span className="bg-gray-100 px-3 py-1 rounded-full">Old Money</span>
+                  <span className="bg-gray-100 px-3 py-1 rounded-full">Coastal</span>
                 </div>
               </div>
             </div>

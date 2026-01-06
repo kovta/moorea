@@ -113,7 +113,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) 
             Drop your fashion pic here
           </h3>
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            Or click to browse • We support <strong>JPEG, PNG, WebP</strong> up to 10MB
+            We support PNG, JPEG, WebP
           </p>
           
           {/* Browse Button */}
@@ -129,29 +129,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) 
             Choose from Gallery
           </button>
 
-          {/* Example items */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-500 mb-3">Perfect for:</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">
-                👗 Dresses
-              </span>
-              <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">
-                👔 Shirts
-              </span>
-              <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">
-                🧥 Jackets
-              </span>
-              <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">
-                👖 Pants
-              </span>
-              <span className="inline-flex items-center gap-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">
-                👟 Shoes
-              </span>
-            </div>
-          </div>
-
-          {/* Pinterest consent checkbox removed to avoid branding issues during API approval */}
         </div>
       )}
 

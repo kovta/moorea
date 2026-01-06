@@ -191,3 +191,4 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, onClose })
 };
 
 export default RegisterForm;
+
