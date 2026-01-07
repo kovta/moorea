@@ -21,9 +21,9 @@ DATABASE_URL = (
 # Log database URL (mask password for security)
 if DATABASE_URL:
     # Mask password in URL for logging
-    import re
-    masked_url = re.sub(r':([^:@]+)@', r':****@', DATABASE_URL)
-    print(f"🔗 Database URL: {masked_url}")
+    # import re
+    # masked_url = re.sub(r':([^:@]+)@', r':****@', DATABASE_URL)
+    print(f"🔗 Database URL: {DATABASE_URL}")
     
     # Warn if using localhost fallback (means DATABASE_URL not set)
     if "localhost" in DATABASE_URL:
