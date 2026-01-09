@@ -233,6 +233,12 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
           ID: {result.job_id.toString().slice(-8)}
         </div>
       </div>
+
+      <div className="mt-4 text-xs text-gray-400 text-center">
+        <Link to="/privacy" className="underline mx-2">Privacy Policy</Link>
+        <Link to="/terms" className="underline mx-2">Terms of Service</Link>
+      </div>
+      </div>
     </div>
   );
 };

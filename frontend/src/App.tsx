@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import LandingPage from './pages/LandingPage';
 import SavedMoodboards from './pages/SavedMoodboards';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 
 /**
  * Main App component with React Router configuration
@@ -23,6 +24,7 @@ const App: React.FC = () => {
           <Route path="/waitlist" element={<LandingPage />} />
           <Route path="/saved" element={<SavedMoodboards />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<Terms />} />
         </Routes>
       </Router>
     </AuthProvider>

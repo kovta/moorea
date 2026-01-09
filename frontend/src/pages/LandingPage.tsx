@@ -100,6 +100,13 @@ const LandingPage: React.FC = () => {
               Privacy Policy
             </Link>
             <span className="text-white/30">•</span>
+            <Link 
+              to="/terms" 
+              className="hover:text-white transition-colors underline decoration-white/30 hover:decoration-white"
+            >
+              Terms of Service
+            </Link>
+            <span className="text-white/30">•</span>
             <a 
               href="mailto:annaszilviakennedy@gmail.com" 
               className="hover:text-white transition-colors underline decoration-white/30 hover:decoration-white"

@@ -263,6 +263,11 @@ const Home: React.FC = () => {
         {moodboardState.status === JobStatus.COMPLETED && (
           <div className="text-center mt-12 text-white/70 text-sm animate-fade-in">
             <p>Made with ✨ for fashion lovers • Share your moodboard with friends!</p>
+            <div className="mt-2">
+              <Link to="/privacy" className="underline mr-2">Privacy Policy</Link>
+              <span className="text-white/30">•</span>
+              <Link to="/terms" className="underline ml-2">Terms of Service</Link>
+            </div>
           </div>
         )}
       </div>
