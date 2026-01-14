@@ -6,6 +6,7 @@ import LandingPage from './pages/LandingPage';
 import SavedMoodboards from './pages/SavedMoodboards';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
+import Footer from './components/Footer';
 
 /**
  * Main App component with React Router configuration
@@ -26,6 +27,7 @@ const App: React.FC = () => {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
         </Routes>
+        <Footer />
       </Router>
     </AuthProvider>
   );

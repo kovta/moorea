@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { MoodboardResult } from '../types';
 
 interface MoodboardDisplayProps {
@@ -235,10 +234,6 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
         </div>
       </div>
 
-      <div className="mt-4 text-xs text-gray-400 text-center">
-        <Link to="/privacy" className="underline mx-2">Privacy Policy</Link>
-        <Link to="/terms" className="underline mx-2">Terms of Service</Link>
-      </div>
     </div>
   );
 };
