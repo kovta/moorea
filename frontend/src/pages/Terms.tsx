@@ -200,8 +200,9 @@ const Terms: React.FC = () => {
                 If you have any questions about these Terms, please contact us at:
               </p>
               <div className="bg-gray-50 p-6 rounded-lg mt-4">
-                <p className="text-gray-800 font-medium">Email: legal@moorea.app</p>
-                <p className="text-gray-800 font-medium">Address: [Company Address]</p>
+                <p className="text-gray-800 font-medium">Email: annaszilviakennedy.com</p>
+                <p className="text-gray-800 font-medium">Website: moreamood.com</p>
+                <p className="text-gray-800 font-medium">Address: 1113, Hamzsabégi ut 60</p>
               </div>
             </section>
           </div>

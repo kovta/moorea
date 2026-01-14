@@ -330,8 +330,8 @@ const PrivacyPolicy: React.FC = () => {
                 <div>
                   <h3 className="text-2xl font-semibold text-gray-800 mb-3">Privacy Inquiries</h3>
                   <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
-                    <li><strong>Email</strong>: privacy@moorea.com</li>
-                    <li><strong>Address</strong>: [Your Business Address]</li>
+                    <li><strong>Email</strong>: panyietelka@yahoo.com</li>
+                    <li><strong>Address</strong>: Budapest, Hamzsabegi ut 60</li>
                     <li><strong>Response Time</strong>: We will respond to privacy inquiries within 30 days</li>
                   </ul>
                 </div>
@@ -339,7 +339,7 @@ const PrivacyPolicy: React.FC = () => {
                 <div>
                   <h3 className="text-2xl font-semibold text-gray-800 mb-3">Data Protection Officer</h3>
                   <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
-                    <li><strong>Contact</strong>: dpo@moorea.com</li>
+                    <li><strong>Contact</strong>: panyietelka@yahoo.com</li>
                     <li><strong>Purpose</strong>: Handle complex privacy requests and compliance matters</li>
                   </ul>
                 </div>
@@ -371,8 +371,8 @@ const PrivacyPolicy: React.FC = () => {
                 <div>
                   <h3 className="text-2xl font-semibold text-gray-800 mb-3">Applicable Law</h3>
                   <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
-                    <li><strong>Governing Law</strong>: [Your Jurisdiction]</li>
-                    <li><strong>Jurisdiction</strong>: Courts of [Your Jurisdiction] have exclusive jurisdiction</li>
+                    <li><strong>Governing Law</strong>: Curia of Hungary</li>
+                    <li><strong>Jurisdiction</strong>: Courts of Curia of Hungary have exclusive jurisdiction</li>
                   </ul>
                 </div>
               </div>
@@ -414,6 +414,14 @@ const PrivacyPolicy: React.FC = () => {
                 </div>
               </div>
             </section>
+
+            <p className="text-gray-700 leading-relaxed text-lg mt-8">
+              <strong>This Privacy Policy is effective as of January 1, 2025, and will remain in effect except with respect to any changes in its provisions in the future, which will be in effect immediately after being posted on this page.</strong>
+            </p>
+
+            <p className="text-gray-700 leading-relaxed text-lg mt-4">
+              <strong>By using our service, you acknowledge that you have read and understood this Privacy Policy and agree to be bound by its terms.</strong>
+            </p>
           </div>
         </div>
       </div>
