@@ -104,64 +104,315 @@ const PrivacyPolicy: React.FC = () => {
 
             <section>
               <h2 className="text-3xl font-semibold text-gray-900 mb-4">Third-Party API Integrations</h2>
-              <p className="text-gray-700 leading-relaxed text-lg">
-                Our service integrates with third-party APIs to enhance your moodboard experience:
-              </p>
-              <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg mt-4">
-                <li><strong>Unsplash API</strong>: For sourcing high-quality lifestyle and fashion imagery</li>
-                <li><strong>Pexels API</strong>: Additional image curation and content discovery</li>
-                <li><strong>Pinterest API</strong>: Fashion inspiration and trend analysis (with user consent)</li>
-              </ul>
-              <p className="text-gray-700 leading-relaxed text-lg mt-4">
-                These integrations help us provide diverse, relevant content for your moodboards while maintaining your privacy and data security.
-              </p>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Content Sources</h3>
+                  <p className="text-gray-700 leading-relaxed text-lg">
+                    We integrate with the following third-party APIs to provide high-quality moodboard content:
+                  </p>
+
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <h4 className="text-xl font-semibold text-gray-800 mb-2">Unsplash API</h4>
+                      <ul className="list-disc list-inside text-gray-700 space-y-1 ml-6 text-lg">
+                        <li><strong>Purpose</strong>: Primary source for lifestyle photography and fashion imagery</li>
+                        <li><strong>Data Shared</strong>: Search keywords and aesthetic terms (no personal images)</li>
+                        <li><strong>Attribution</strong>: Full photographer credits displayed in moodboards</li>
+                        <li><strong>Privacy</strong>: Unsplash's privacy policy applies to their service</li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h4 className="text-xl font-semibold text-gray-800 mb-2">Pexels API</h4>
+                      <ul className="list-disc list-inside text-gray-700 space-y-1 ml-6 text-lg">
+                        <li><strong>Purpose</strong>: Secondary content source for fashion photography and lifestyle images</li>
+                        <li><strong>Data Shared</strong>: Search keywords and aesthetic terms (no personal images)</li>
+                        <li><strong>Attribution</strong>: Photographer credits provided where applicable</li>
+                        <li><strong>Privacy</strong>: Pexels' privacy policy applies to their service</li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h4 className="text-xl font-semibold text-gray-800 mb-2">Pinterest API (Future Integration)</h4>
+                      <ul className="list-disc list-inside text-gray-700 space-y-1 ml-6 text-lg">
+                        <li><strong>Purpose</strong>: Enhanced content diversity for moodboard generation</li>
+                        <li><strong>Data Shared</strong>: Search keywords and aesthetic terms (no personal images)</li>
+                        <li><strong>Attribution</strong>: Full Pinterest user and original source attribution</li>
+                        <li><strong>Privacy</strong>: Pinterest's privacy policy applies to their service</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">AI/ML Services</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Hugging Face</strong>: CLIP model inference for image classification</li>
+                    <li><strong>Data Shared</strong>: Image embeddings and aesthetic vocabulary (no personal identifiers)</li>
+                    <li><strong>Purpose</strong>: Fashion aesthetic classification and similarity matching</li>
+                  </ul>
+                </div>
+              </div>
             </section>
 
             <section>
-              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Data Security</h2>
-              <p className="text-gray-700 leading-relaxed text-lg">
-                We implement industry-standard security measures to protect your personal information:
-              </p>
-              <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg mt-4">
-                <li><strong>Encryption</strong>: All data transmission uses HTTPS/TLS encryption</li>
-                <li><strong>Secure Storage</strong>: User credentials are hashed with SHA256 and salted</li>
-                <li><strong>Access Controls</strong>: Strict access controls and regular security audits</li>
-                <li><strong>Data Minimization</strong>: We only collect and retain data necessary for service provision</li>
-              </ul>
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Data Security and Protection</h2>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Security Measures</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Encryption</strong>: All data transmission uses HTTPS/TLS encryption</li>
+                    <li><strong>Authentication</strong>: Secure JWT-based authentication with SHA256 password hashing</li>
+                    <li><strong>Access Controls</strong>: Limited access to personal data on a need-to-know basis</li>
+                    <li><strong>Regular Audits</strong>: Periodic security assessments and vulnerability testing</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Data Retention</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Uploaded Images</strong>: Processed temporarily and immediately deleted after moodboard generation</li>
+                    <li><strong>User Accounts</strong>: Retained until account deletion or 2 years of inactivity</li>
+                    <li><strong>Usage Analytics</strong>: Aggregated data retained for up to 3 years for service improvement</li>
+                    <li><strong>Moodboard Collections</strong>: Retained until user account deletion</li>
+                  </ul>
+                </div>
+              </div>
             </section>
 
             <section>
               <h2 className="text-3xl font-semibold text-gray-900 mb-4">Your Rights and Choices</h2>
-              <div className="space-y-4">
-                <p className="text-gray-700 leading-relaxed text-lg">
-                  You have several rights regarding your personal information:
-                </p>
-                <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
-                  <li><strong>Access</strong>: Request a copy of your personal data</li>
-                  <li><strong>Correction</strong>: Update or correct your information</li>
-                  <li><strong>Deletion</strong>: Request deletion of your account and associated data</li>
-                  <li><strong>Portability</strong>: Export your data in a structured format</li>
-                  <li><strong>Opt-out</strong>: Withdraw consent for non-essential processing</li>
-                </ul>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Access and Control</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Account Deletion</strong>: You can delete your account and all associated data at any time</li>
+                    <li><strong>Data Export</strong>: Request a copy of your personal data in a portable format</li>
+                    <li><strong>Data Correction</strong>: Update or correct your account information</li>
+                    <li><strong>Opt-Out</strong>: Unsubscribe from communications or disable analytics tracking</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Image Processing Consent</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Explicit Consent</strong>: By uploading an image, you grant us permission to process it for moodboard generation</li>
+                    <li><strong>Withdrawal</strong>: You can withdraw consent by deleting uploaded images or your account</li>
+                    <li><strong>Purpose Limitation</strong>: Images are only processed for the stated purpose of moodboard generation</li>
+                    <li><strong>No Commercial Use</strong>: We do not use your images for commercial purposes beyond service provision</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Communication Preferences</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Email Notifications</strong>: Opt-in for account-related notifications and service updates</li>
+                    <li><strong>Marketing Communications</strong>: Opt-in for promotional content and feature announcements</li>
+                    <li><strong>Service Updates</strong>: Essential service notifications (cannot be opted out)</li>
+                  </ul>
+                </div>
               </div>
             </section>
 
             <section>
-              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Contact Us</h2>
-              <p className="text-gray-700 leading-relaxed text-lg">
-                If you have any questions about this Privacy Policy or our data practices, please contact us at:
-              </p>
-              <div className="bg-gray-50 p-6 rounded-lg mt-4">
-                <p className="text-gray-800 font-medium">Email: privacy@moorea.app</p>
-                <p className="text-gray-800 font-medium">Address: [Company Address]</p>
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">International Data Transfers</h2>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Data Processing Locations</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Primary Processing</strong>: United States (AWS cloud infrastructure)</li>
+                    <li><strong>Third-Party Services</strong>: Data may be processed by our API partners globally</li>
+                    <li><strong>Adequacy Decisions</strong>: We ensure appropriate safeguards for international transfers</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Compliance Frameworks</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>GDPR</strong>: European Union General Data Protection Regulation compliance</li>
+                    <li><strong>CCPA</strong>: California Consumer Privacy Act compliance</li>
+                    <li><strong>PIPEDA</strong>: Personal Information Protection and Electronic Documents Act (Canada)</li>
+                  </ul>
+                </div>
               </div>
             </section>
 
             <section>
-              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Changes to This Policy</h2>
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Children's Privacy</h2>
               <p className="text-gray-700 leading-relaxed text-lg">
-                We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the "Last Updated" date.
+                Our service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us to have the information removed.
               </p>
+            </section>
+
+            <section>
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Cookies and Tracking Technologies</h2>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Types of Cookies</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Essential Cookies</strong>: Required for basic service functionality and authentication</li>
+                    <li><strong>Analytics Cookies</strong>: Help us understand usage patterns and improve our service</li>
+                    <li><strong>Preference Cookies</strong>: Remember your settings and preferences</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Cookie Management</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Browser Settings</strong>: You can control cookies through your browser settings</li>
+                    <li><strong>Opt-Out</strong>: Disable non-essential cookies while maintaining service functionality</li>
+                    <li><strong>Third-Party Tracking</strong>: We do not use third-party advertising or tracking cookies</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Changes to This Privacy Policy</h2>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Notification Process</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Material Changes</strong>: We will notify users of significant changes via email or service notification</li>
+                    <li><strong>Regular Updates</strong>: Minor updates will be posted on this page with updated "Last Updated" date</li>
+                    <li><strong>Continued Use</strong>: Continued use of our service after changes constitutes acceptance of the updated policy</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Version History</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Version 1.0</strong>: Initial privacy policy (January 1, 2025)</li>
+                    <li><strong>Future Versions</strong>: Will be documented with change summaries</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Legal Basis for Processing (GDPR)</h2>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Lawful Bases</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Consent</strong>: Explicit consent for image processing and optional account creation</li>
+                    <li><strong>Legitimate Interest</strong>: Service improvement, security, and fraud prevention</li>
+                    <li><strong>Contract Performance</strong>: Providing requested moodboard generation services</li>
+                    <li><strong>Legal Obligation</strong>: Compliance with applicable laws and regulations</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Data Subject Rights (GDPR)</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Right of Access</strong>: Request information about personal data processing</li>
+                    <li><strong>Right to Rectification</strong>: Correct inaccurate or incomplete data</li>
+                    <li><strong>Right to Erasure</strong>: Request deletion of personal data ("right to be forgotten")</li>
+                    <li><strong>Right to Restrict Processing</strong>: Limit how we process your data</li>
+                    <li><strong>Right to Data Portability</strong>: Receive your data in a portable format</li>
+                    <li><strong>Right to Object</strong>: Object to processing based on legitimate interests</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Contact Information</h2>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Privacy Inquiries</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Email</strong>: privacy@moorea.com</li>
+                    <li><strong>Address</strong>: [Your Business Address]</li>
+                    <li><strong>Response Time</strong>: We will respond to privacy inquiries within 30 days</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Data Protection Officer</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Contact</strong>: dpo@moorea.com</li>
+                    <li><strong>Purpose</strong>: Handle complex privacy requests and compliance matters</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Legal Requests</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Law Enforcement</strong>: We will comply with valid legal requests for user data</li>
+                    <li><strong>Court Orders</strong>: Data disclosure only with proper legal process</li>
+                    <li><strong>User Notification</strong>: We will notify users of legal requests when legally permitted</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Dispute Resolution</h2>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Complaint Process</h3>
+                  <ol className="list-decimal list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Internal Resolution</strong>: Contact us first to resolve privacy concerns</li>
+                    <li><strong>Regulatory Complaints</strong>: File complaints with relevant data protection authorities</li>
+                    <li><strong>Arbitration</strong>: Binding arbitration for disputes (if applicable)</li>
+                  </ol>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Applicable Law</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Governing Law</strong>: [Your Jurisdiction]</li>
+                    <li><strong>Jurisdiction</strong>: Courts of [Your Jurisdiction] have exclusive jurisdiction</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-3xl font-semibold text-gray-900 mb-4">Service-Specific Privacy Information</h2>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">AI Processing Transparency</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Model Information</strong>: We use CLIP (Contrastive Language-Image Pre-training) for aesthetic classification</li>
+                    <li><strong>Training Data</strong>: Our AI models are trained on publicly available datasets</li>
+                    <li><strong>Bias Mitigation</strong>: We actively work to reduce bias in our aesthetic classifications</li>
+                    <li><strong>Human Review</strong>: AI classifications may be reviewed by human experts for quality assurance</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Moodboard Generation Process</h3>
+                  <ol className="list-decimal list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Image Analysis</strong>: Your uploaded image is analyzed for fashion aesthetics</li>
+                    <li><strong>Keyword Generation</strong>: Relevant search terms are generated based on detected aesthetics</li>
+                    <li><strong>Content Fetching</strong>: Third-party APIs are queried for complementary images</li>
+                    <li><strong>Similarity Matching</strong>: AI ranks images by visual similarity to your original</li>
+                    <li><strong>Moodboard Assembly</strong>: Final moodboard is created with proper attribution</li>
+                  </ol>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-3">Data Minimization</h3>
+                  <ul className="list-disc list-inside text-gray-700 space-y-2 ml-6 text-lg">
+                    <li><strong>Collection Limitation</strong>: We only collect data necessary for service provision</li>
+                    <li><strong>Purpose Limitation</strong>: Data is used only for stated purposes</li>
+                    <li><strong>Retention Limitation</strong>: Data is retained only as long as necessary</li>
+                    <li><strong>Accuracy</strong>: We maintain accurate and up-to-date information</li>
+                  </ul>
+                </div>
+              </div>
             </section>
           </div>
         </div>
