@@ -171,33 +171,6 @@ const PrivacyPolicy: React.FC = () => {
 };
 
 export default PrivacyPolicy;
-                    We automatically collect information about how you use our service, including:
-                  </p>
-                  <ul className="list-disc list-inside text-gray-700 ml-4 space-y-1">
-                    <li>Images you upload for moodboard generation</li>
-                    <li>Moodboards you create and save</li>
-                    <li>Preferences and aesthetic selections</li>
-                  </ul>
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-3">How We Use Your Information</h2>
-              <p className="text-gray-700 leading-relaxed mb-3">
-                We use the information we collect to:
-              </p>
-              <ul className="list-disc list-inside text-gray-700 ml-4 space-y-1">
-                <li>Provide and improve our moodboard generation service</li>
-                <li>Process your waitlist signup and notify you when we launch</li>
-                <li>Personalize your experience and generate relevant moodboards</li>
-                <li>Communicate with you about our service</li>
-                <li>Ensure the security and functionality of our platform</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-3">Data Storage and Security</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
                 We use industry-standard security measures to protect your data. Your images and personal information 
                 are stored securely using encrypted databases and secure cloud storage. We do not share your personal 
