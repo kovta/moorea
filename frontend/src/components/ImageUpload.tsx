@@ -8,7 +8,6 @@ interface ImageUploadProps {
 
 const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [pinterestConsent, setPinterestConsent] = useState<boolean>(false);
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
     if (rejectedFiles.length > 0) {

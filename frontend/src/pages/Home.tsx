@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import ImageUpload from '../components/ImageUpload';
 import ProgressIndicator from '../components/ProgressIndicator';
 import MoodboardDisplay from '../components/MoodboardDisplay';
