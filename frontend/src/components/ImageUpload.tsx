@@ -21,13 +21,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onFileSelect, isUploading }) 
     if (acceptedFiles.length > 0 && !isUploading) {
       const file = acceptedFiles[0];
       console.log('✅ File accepted:', file.name, file.type);
-      onFileSelect(file, pinterestConsent);
+      onFileSelect(file, false);  // Pinterest consent not implemented yet
       
       // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
-  }, [onFileSelect, isUploading, pinterestConsent]);
+  }, [onFileSelect, isUploading]);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
