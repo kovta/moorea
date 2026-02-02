@@ -178,3 +178,42 @@ export const subscribeToWaitlist = async (request: WaitlistSubscribeRequest): Pr
   const response = await apiClient.post<WaitlistSubscribeResponse>('/waitlist/subscribe', request);
   return response.data;
 };
+
+// Pinterest OAuth API functions
+export interface PinterestAuthResponse {
+  authorization_url: string;
+}
+
+export interface PinterestStatusResponse {
+  authenticated: boolean;
+  has_token: boolean;
+}
+
+export interface PinterestTokenResponse {
+  message: string;
+  access_token_expires_in?: number;
+  scope?: string;
+}
+
+export const initiatePinterestAuth = (): void => {
+  // Direct browser redirect to authorization endpoint
+  // The backend will handle the OAuth flow and redirect to the authorization URL
+  window.location.href = `${API_BASE}/auth/pinterest/authorize`;
+};
+
+export const checkPinterestStatus = async (): Promise<PinterestStatusResponse> => {
+  const response = await apiClient.get<PinterestStatusResponse>('/auth/pinterest/status');
+  return response.data;
+};
+
+export const refreshPinterestToken = async (): Promise<PinterestTokenResponse> => {
+  const response = await apiClient.post<PinterestTokenResponse>('/auth/pinterest/refresh');
+  return response.data;
+};
+
+export const searchPinterest = async (query: string): Promise<any> => {
+  const response = await apiClient.get('/auth/pinterest/search', {
+    params: { query }
+  });
+  return response.data;
+};

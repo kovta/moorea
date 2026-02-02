@@ -1,165 +1,129 @@
-"""Pinterest API client for fetching pins and boards."""
+"""Pinterest API client for fetching pins and images."""
 
 import asyncio
-import logging
-from typing import List, Optional, Dict, Any
-import aiohttp
+from typing import List, Dict, Any, Optional
+from urllib.parse import urlencode
+
+from services.pinterest_oauth_service import pinterest_oauth
 from models import ImageCandidate
 
-logger = logging.getLogger(__name__)
 
+class PinterestAPIClient:
+    """Client for Pinterest REST API v5."""
 
-class PinterestClient:
-    """Pinterest API client for fetching pins and boards."""
-    
-    def __init__(self, access_token: str):
-        """Initialize Pinterest client with access token."""
-        self.access_token = access_token
-        self.base_url = "https://api.pinterest.com/v5"
-        self.headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
+    def __init__(self):
+        self.oauth_service = pinterest_oauth
+
+    async def search_pins(
+        self,
+        query: str,
+        limit: int = 25,
+        bookmark: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Search for pins using Pinterest API."""
+        params = {
+            "query": query,
+            "limit": min(limit, 100)  # Pinterest API max is 100
         }
-    
-    async def search_pins(self, query: str, limit: int = 10) -> List[ImageCandidate]:
-        """Search for pins based on query."""
-        try:
-            url = f"{self.base_url}/search/pins"
-            params = {
-                "query": query,
-                "limit": limit,
-                "bookmark": None
-            }
-            
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=self.headers, params=params) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        pins = data.get("items", [])
-                        
-                        candidates = []
-                        for pin in pins:
-                            # Extract image URL from pin
-                            image_url = None
-                            if "media" in pin and "images" in pin["media"]:
-                                images = pin["media"]["images"]
-                                # Try to get the best quality image
-                                if "564x" in images:
-                                    image_url = images["564x"]["url"]
-                                elif "736x" in images:
-                                    image_url = images["736x"]["url"]
-                                elif "originals" in images:
-                                    image_url = images["originals"]["url"]
-                            
-                            if image_url:
-                                candidate = ImageCandidate(
-                                    id=pin.get("id", ""),
-                                    url=image_url,
-                                    photographer=pin.get("creator", {}).get("username", "Pinterest User"),
-                                    source_api="pinterest",
-                                    pinterest_url=pin.get("url", ""),
-                                    pinterest_board=pin.get("board_name", ""),
-                                    title=pin.get("title", ""),
-                                    description=pin.get("description", "")
-                                )
-                                candidates.append(candidate)
-                        
-                        logger.info(f"✅ Pinterest: Found {len(candidates)} pins for query '{query}'")
-                        return candidates
-                    
-                    else:
-                        logger.warning(f"⚠️ Pinterest API error: {response.status} - {await response.text()}")
-                        return []
-                        
-        except Exception as e:
-            logger.error(f"❌ Pinterest search error: {str(e)}")
-            return []
-    
-    async def get_board_pins(self, board_id: str, limit: int = 10) -> List[ImageCandidate]:
-        """Get pins from a specific board."""
-        try:
-            url = f"{self.base_url}/boards/{board_id}/pins"
-            params = {
-                "limit": limit,
-                "bookmark": None
-            }
-            
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=self.headers, params=params) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        pins = data.get("items", [])
-                        
-                        candidates = []
-                        for pin in pins:
-                            # Extract image URL from pin
-                            image_url = None
-                            if "media" in pin and "images" in pin["media"]:
-                                images = pin["media"]["images"]
-                                # Try to get the best quality image
-                                if "564x" in images:
-                                    image_url = images["564x"]["url"]
-                                elif "736x" in images:
-                                    image_url = images["736x"]["url"]
-                                elif "originals" in images:
-                                    image_url = images["originals"]["url"]
-                            
-                            if image_url:
-                                candidate = ImageCandidate(
-                                    id=pin.get("id", ""),
-                                    url=image_url,
-                                    photographer=pin.get("creator", {}).get("username", "Pinterest User"),
-                                    source_api="pinterest",
-                                    pinterest_url=pin.get("url", ""),
-                                    pinterest_board=pin.get("board_name", ""),
-                                    title=pin.get("title", ""),
-                                    description=pin.get("description", "")
-                                )
-                                candidates.append(candidate)
-                        
-                        logger.info(f"✅ Pinterest: Found {len(candidates)} pins from board '{board_id}'")
-                        return candidates
-                    
-                    else:
-                        logger.warning(f"⚠️ Pinterest API error: {response.status} - {await response.text()}")
-                        return []
-                        
-        except Exception as e:
-            logger.error(f"❌ Pinterest board error: {str(e)}")
-            return []
-    
-    async def test_connection(self) -> bool:
-        """Test Pinterest API connection."""
-        try:
-            url = f"{self.base_url}/user_account"
-            
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=self.headers) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        username = data.get("username", "Unknown")
-                        logger.info(f"✅ Pinterest API connected successfully! User: {username}")
-                        return True
-                    else:
-                        logger.warning(f"⚠️ Pinterest API connection failed: {response.status}")
-                        return False
-                        
-        except Exception as e:
-            logger.error(f"❌ Pinterest connection test error: {str(e)}")
-            return False
+
+        if bookmark:
+            params["bookmark"] = bookmark
+
+        endpoint = f"/v5/pins/search?{urlencode(params)}"
+
+        return await self.oauth_service.make_authenticated_request("GET", endpoint)
+
+    async def get_pin_details(self, pin_id: str) -> Dict[str, Any]:
+        """Get detailed information about a specific pin."""
+        endpoint = f"/v5/pins/{pin_id}"
+        return await self.oauth_service.make_authenticated_request("GET", endpoint)
+
+    async def get_user_pins(
+        self,
+        username: str,
+        limit: int = 25,
+        bookmark: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Get pins from a specific user."""
+        params = {"limit": min(limit, 100)}
+
+        if bookmark:
+            params["bookmark"] = bookmark
+
+        query_string = f"?{urlencode(params)}" if params else ""
+        endpoint = f"/v5/users/{username}/pins{query_string}"
+
+        return await self.oauth_service.make_authenticated_request("GET", endpoint)
+
+    async def search_and_extract_images(
+        self,
+        aesthetic_query: str,
+        max_images: int = 20
+    ) -> List[ImageCandidate]:
+        """Search Pinterest for images matching an aesthetic and extract image data."""
+        images = []
+        bookmark = None
+
+        while len(images) < max_images:
+            try:
+                # Search for pins
+                search_results = await self.search_pins(
+                    query=aesthetic_query,
+                    limit=min(25, max_images - len(images)),
+                    bookmark=bookmark
+                )
+
+                pins = search_results.get("items", [])
+
+                if not pins:
+                    break
+
+                # Extract image data from pins
+                for pin in pins:
+                    if len(images) >= max_images:
+                        break
+
+                    # Get the best image URL available
+                    images_data = pin.get("images", {})
+                    image_url = None
+
+                    # Prefer original size, fallback to others
+                    for size in ["original", "564x", "236x", "136x"]:
+                        if size in images_data and "url" in images_data[size]:
+                            image_url = images_data[size]["url"]
+                            break
+
+                    if image_url:
+                        candidate = ImageCandidate(
+                            id=pin.get("id", ""),
+                            url=image_url,
+                            photographer=pin.get("creator", {}).get("username", "Pinterest User"),
+                            source_api="pinterest",
+                            pinterest_url=pin.get("url", ""),
+                            pinterest_board=pin.get("board_name", ""),
+                            title=pin.get("title", ""),
+                            description=pin.get("description", "")
+                        )
+                        images.append(candidate)
+
+                # Check for next page
+                bookmark = search_results.get("bookmark")
+                if not bookmark:
+                    break
+
+                # Small delay to be respectful to the API
+                await asyncio.sleep(0.1)
+
+            except Exception as e:
+                print(f"Error fetching Pinterest images: {e}")
+                break
+
+        return images
+
+    async def is_authenticated(self) -> bool:
+        """Check if Pinterest API is authenticated."""
+        return self.oauth_service.get_access_token() is not None
 
 
-# Global Pinterest client instance
-pinterest_client: Optional[PinterestClient] = None
-
-
-def initialize_pinterest_client(access_token: str) -> PinterestClient:
-    """Initialize the global Pinterest client."""
-    global pinterest_client
-    pinterest_client = PinterestClient(access_token)
-    return pinterest_client
-
-
-def get_pinterest_client() -> Optional[PinterestClient]:
-    """Get the global Pinterest client instance."""
-    return pinterest_client
+# Global Pinterest API client instance
+pinterest_client = PinterestAPIClient()

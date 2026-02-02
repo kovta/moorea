@@ -13,7 +13,7 @@ from services.aesthetic_service import aesthetic_service
 from services.unsplash_client import unsplash_client
 from services.pexels_client import pexels_client
 from services.flickr_client import flickr_client
-from services.pinterest_client import pinterest_client, initialize_pinterest_client
+from services.pinterest_client import pinterest_client
 from services.clip_service import clip_service
 
 logger = logging.getLogger(__name__)
@@ -23,11 +23,8 @@ class MoodboardService:
     """Service for orchestrating moodboard generation pipeline."""
     
     def __init__(self):
-        # Initialize Pinterest client if token is available (optional)
-        if settings.pinterest_access_token:
-            initialize_pinterest_client(settings.pinterest_access_token)
-            logger.info("✅ Pinterest client initialized")
-        # Pinterest is optional - no warning needed if not configured
+        # Pinterest client is now OAuth-based and initialized globally
+        pass
     
     async def queue_generation(self, job_id: UUID, image_content: bytes, pinterest_consent: bool = False) -> None:
         """Queue moodboard generation job."""
@@ -336,9 +333,9 @@ class MoodboardService:
             else:
                 logger.warning(f"⚠️ Pexels API key not configured, skipping Pexels for '{keyword}'")
             
-            # Add Pinterest if user consented and client is available
-            if pinterest_consent and pinterest_client:
-                tasks.append(pinterest_client.search_pins(keyword, limit=images_per_keyword))
+            # Add Pinterest if user consented and OAuth is authenticated
+            if pinterest_consent and await pinterest_client.is_authenticated():
+                tasks.append(pinterest_client.search_and_extract_images(keyword, max_images=images_per_keyword))
             
             all_tasks.extend(tasks)
         
@@ -346,7 +343,7 @@ class MoodboardService:
         api_count = sum([
             bool(settings.unsplash_access_key),
             bool(settings.pexels_api_key),
-            bool(pinterest_consent and pinterest_client)
+            bool(pinterest_consent and await pinterest_client.is_authenticated())
         ])
         logger.info(f"⚡ SPEED MODE: Fetching from {api_count} API(s) for {len(top_keywords)} keywords ({len(all_tasks)} total requests)")
         

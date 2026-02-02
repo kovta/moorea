@@ -9,12 +9,28 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from models import HealthResponse
-from services.aesthetic_service import aesthetic_service
-from services.clip_service import clip_service
 from services.cache_service import cache_service
-from app.routes import moodboard, aesthetics, auth, moodboard_save
+from app.routes import auth, pinterest_auth
 from app.routes.waitlist import router as waitlist_router
 from database import create_tables
+
+# Optional routes that require ML dependencies
+try:
+    from app.routes import moodboard, aesthetics, moodboard_save
+    MOODBOARD_ROUTES_AVAILABLE = True
+except ImportError:
+    moodboard = aesthetics = moodboard_save = None
+    MOODBOARD_ROUTES_AVAILABLE = False
+
+# Optional imports for ML features (gracefully handle if not installed)
+try:
+    from services.aesthetic_service import aesthetic_service
+    from services.clip_service import clip_service
+    ML_AVAILABLE = True
+except ImportError:
+    aesthetic_service = None
+    clip_service = None
+    ML_AVAILABLE = False
 
 
 # Configure logging
@@ -27,30 +43,36 @@ async def lifespan(app: FastAPI):
     """Application lifespan management."""
     logger.info("Starting up Moodboard Generator API...")
     
-    # Initialize database
+    # Initialize database (optional, may fail locally without proper setup)
     try:
         create_tables()
         logger.info("Database tables created")
     except Exception as e:
-        logger.error(f"❌ Failed to connect to database: {str(e)}")
-        logger.error("💡 Make sure DATABASE_URL is set in Railway → Variables tab")
-        logger.error("💡 Get your Supabase connection string from: Settings → Database → Connection string (Transaction mode)")
-        raise  # Re-raise to fail startup if DB is required
+        logger.warning(f"⚠️  Database initialization skipped: {str(e)}")
+        logger.warning("✅ Pinterest OAuth endpoints will still work")
     
     # Initialize services (optional - gracefully handle failures)
-    await cache_service.initialize()
-    
     try:
-        await aesthetic_service.initialize()
-        logger.info("Aesthetic service initialized")
+        await cache_service.initialize()
+        logger.info("Cache service initialized")
     except Exception as e:
-        logger.warning(f"Aesthetic service initialization failed (ML features disabled): {e}")
+        logger.warning(f"⚠️  Cache service initialization failed: {e}")
     
-    try:
-        await clip_service.initialize()
-        logger.info("CLIP service initialized")
-    except Exception as e:
-        logger.warning(f"CLIP service initialization failed (ML features disabled): {e}")
+    if ML_AVAILABLE:
+        try:
+            await aesthetic_service.initialize()
+            logger.info("Aesthetic service initialized")
+        except Exception as e:
+            logger.warning(f"Aesthetic service initialization failed (ML features disabled): {e}")
+        
+        try:
+            await clip_service.initialize()
+            logger.info("CLIP service initialized")
+        except Exception as e:
+            logger.warning(f"CLIP service initialization failed (ML features disabled): {e}")
+    else:
+        logger.warning("⚠️  ML libraries not installed - aesthetic/CLIP features disabled")
+        logger.info("✅ Pinterest OAuth features are available")
     
     logger.info("Services initialized successfully")
     
@@ -102,11 +124,17 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(moodboard.router, prefix="/api/v1", tags=["moodboard"])
-app.include_router(aesthetics.router, prefix="/api/v1", tags=["aesthetics"])
+if MOODBOARD_ROUTES_AVAILABLE:
+    app.include_router(moodboard.router, prefix="/api/v1", tags=["moodboard"])
+    app.include_router(aesthetics.router, prefix="/api/v1", tags=["aesthetics"])
+    app.include_router(moodboard_save.router, tags=["moodboard-save"])
+    logger.info("✅ Moodboard routes enabled")
+else:
+    logger.warning("⚠️  Moodboard routes disabled (ML dependencies not installed)")
+
 app.include_router(auth.router, tags=["authentication"])
-app.include_router(moodboard_save.router, tags=["moodboard-save"])
 app.include_router(waitlist_router, tags=["waitlist"])
+app.include_router(pinterest_auth.router, tags=["pinterest-oauth"])
 
 
 @app.get("/", response_model=HealthResponse)

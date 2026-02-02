@@ -165,12 +165,12 @@ Our service is not intended for children under 13 years of age. We do not knowin
 ## Contact Information
 
 ### Privacy Inquiries
-- **Email**: privacy@moorea.com
-- **Address**: [Your Business Address]
+- **Email**: panyietelka@yahoo.com
+- **Address**: Budapest, Hamzsabegi ut 60
 - **Response Time**: We will respond to privacy inquiries within 30 days
 
 ### Data Protection Officer
-- **Contact**: dpo@moorea.com
+- **Contact**: panyietelka@yahoo.com
 - **Purpose**: Handle complex privacy requests and compliance matters
 
 ### Legal Requests
@@ -186,8 +186,8 @@ Our service is not intended for children under 13 years of age. We do not knowin
 3. **Arbitration**: Binding arbitration for disputes (if applicable)
 
 ### Applicable Law
-- **Governing Law**: [Your Jurisdiction]
-- **Jurisdiction**: Courts of [Your Jurisdiction] have exclusive jurisdiction
+- **Governing Law**:  Curia of Hungary
+- **Jurisdiction**: Courts of  Curia of Hungary have exclusive jurisdiction
 
 ## Service-Specific Privacy Information
 

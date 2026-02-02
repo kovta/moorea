@@ -9,6 +9,7 @@ import SaveMoodboard from '../components/SaveMoodboard';
 import { uploadImage, getJobStatus, getMoodboardResult } from '../utils/api';
 import { JobStatus, MoodboardState } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import PinterestLoginButton from '../components/PinterestLoginButton';
 
 const Home: React.FC = () => {
   const [moodboardState, setMoodboardState] = useState<MoodboardState>({
@@ -149,6 +150,11 @@ const Home: React.FC = () => {
             <p className="text-lg md:text-xl lg:text-2xl text-white font-medium max-w-2xl mx-auto leading-relaxed px-4">
               Upload your photo and we will help you find the aesthetic and how to style it.
             </p>
+
+            {/* Optional: Connect Pinterest for richer results (mock or real) */}
+            <div className="mt-6 flex justify-center">
+              <PinterestLoginButton />
+            </div>
           </div>
         )}
 

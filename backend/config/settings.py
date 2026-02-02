@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     
     # Pinterest API
     pinterest_access_token: Optional[str] = None
+    pinterest_client_id: Optional[str] = None
+    pinterest_client_secret: Optional[str] = None
+    pinterest_redirect_uri: str = "http://localhost:3000/auth/pinterest/callback"
+    backend_url: str = "http://localhost:8002"  # Backend API URL for OAuth redirects
+    use_mock_pinterest: bool = True  # Toggle between mock and real API
     
     # reCAPTCHA
     recaptcha_secret_key: Optional[str] = None

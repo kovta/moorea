@@ -206,7 +206,7 @@ These Terms and your use of the Service are governed by the laws of the State of
 You agree to submit to the exclusive jurisdiction of the federal and state courts located in California for any legal action or proceeding arising from these Terms or the Service.
 
 ### Dispute Resolution
-Before initiating legal proceedings, you agree to attempt informal resolution by contacting us at [support@moreaapp.com]. If informal resolution is not successful within 30 days, you may pursue legal remedies.
+Before initiating legal proceedings, you agree to attempt informal resolution by contacting us at panyietelka@yahoo.com If informal resolution is not successful within 30 days, you may pursue legal remedies.
 
 ### Arbitration (Optional)
 Some disputes may be subject to binding arbitration. Details will be provided in any dispute resolution notices.
@@ -224,9 +224,9 @@ These Terms, along with the Privacy Policy and any other agreements we provide, 
 If you have questions about these Terms of Service, please contact us at:
 
 **Moodboard Generator**
-- Email: [annaszilviakennedy.com]
-- Website: [moreamood.com]
-- Mailing Address: [1113, Hamzsabégi űt 60/e]
+- Email: annaszilviakennedy.com
+- Website: moreamood.com
+- Mailing Address: 1113, Hamzsabégi ut 60
 
 ---
 
