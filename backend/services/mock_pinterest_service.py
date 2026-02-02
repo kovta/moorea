@@ -130,4 +130,8 @@ class MockPinterestOAuthService:
 
 
 # Global mock service instance
-mock_pinterest_oauth = MockPinterestOAuthService()
+try:
+    mock_pinterest_oauth = MockPinterestOAuthService()
+except Exception as e:
+    logger.error(f"Failed to initialize mock Pinterest OAuth service: {str(e)}", exc_info=True)
+    mock_pinterest_oauth = None

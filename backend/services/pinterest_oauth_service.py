@@ -159,11 +159,14 @@ try:
     if settings.use_mock_pinterest:
         from .mock_pinterest_service import mock_pinterest_oauth
         pinterest_oauth = mock_pinterest_oauth
+        if pinterest_oauth is None:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error("Mock Pinterest OAuth service failed to initialize")
     else:
         pinterest_oauth = PinterestOAuthService()
 except Exception as e:
     import logging
     logger = logging.getLogger(__name__)
     logger.error(f"Failed to initialize Pinterest OAuth service: {str(e)}", exc_info=True)
-    # Create a fallback service that returns dummy data
     pinterest_oauth = None
