@@ -125,31 +125,32 @@ class PinterestOAuthService:
                         status_code=400,
                         detail=f"Token exchange failed: {response.text}"
                     )
+
+                token_data = response.json()
+
+                # Store token in Redis (with expiry)
+                access_token = token_data["access_token"]
+                expires_in = token_data.get("expires_in", 2592000)  # 30 days default
+
+                self.redis_client.setex(
+                    "pinterest_access_token",
+                    expires_in,
+                    access_token
+                )
+
+                if "refresh_token" in token_data:
+                    self.redis_client.set(
+                        "pinterest_refresh_token",
+                        token_data["refresh_token"]
+                    )
+
+                logger.info("Pinterest OAuth token successfully exchanged and stored")
+                return token_data
         except HTTPException:
             raise
         except Exception as e:
             logger.error(f"OAuth token exchange error: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"OAuth callback failed: {str(e)}")
-
-            token_data = response.json()
-
-            # Store token in Redis (with expiry)
-            access_token = token_data["access_token"]
-            expires_in = token_data.get("expires_in", 2592000)  # 30 days default
-
-            self.redis_client.setex(
-                "pinterest_access_token",
-                expires_in,
-                access_token
-            )
-
-            if "refresh_token" in token_data:
-                self.redis_client.set(
-                    "pinterest_refresh_token",
-                    token_data["refresh_token"]
-                )
-
-            return token_data
 
     async def refresh_access_token(self) -> Optional[str]:
         """Refresh expired access token"""
