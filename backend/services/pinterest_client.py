@@ -63,10 +63,13 @@ class PinterestAPIClient:
         """Search Pinterest for images matching an aesthetic and extract image data."""
         images = []
         bookmark = None
+        import logging
+        logger = logging.getLogger(__name__)
 
         while len(images) < max_images:
             try:
                 # Search for pins
+                logger.info(f"Searching Pinterest for '{aesthetic_query}', limit={min(25, max_images - len(images))}")
                 search_results = await self.search_pins(
                     query=aesthetic_query,
                     limit=min(25, max_images - len(images)),
@@ -74,8 +77,10 @@ class PinterestAPIClient:
                 )
 
                 pins = search_results.get("items", [])
+                logger.info(f"Pinterest search returned {len(pins)} pins for '{aesthetic_query}'")
 
                 if not pins:
+                    logger.info(f"No more pins available for '{aesthetic_query}'")
                     break
 
                 # Extract image data from pins
@@ -115,7 +120,7 @@ class PinterestAPIClient:
                 await asyncio.sleep(0.1)
 
             except Exception as e:
-                print(f"Error fetching Pinterest images: {e}")
+                logger.error(f"Error fetching Pinterest images for '{aesthetic_query}': {str(e)}", exc_info=True)
                 break
 
         return images

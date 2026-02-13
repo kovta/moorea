@@ -396,12 +396,14 @@ class MoodboardService:
             all_tasks.extend(tasks)
         
         # Execute all API calls concurrently with shorter timeout
+        pinterest_authenticated = await pinterest_client.is_authenticated()
         api_count = sum([
             bool(settings.unsplash_access_key),
             bool(settings.pexels_api_key and getattr(settings, 'enable_pexels', True)),
-            bool(pinterest_consent and await pinterest_client.is_authenticated())
+            bool(pinterest_authenticated)
         ])
         logger.info(f"⚡ SPEED MODE: Fetching from {api_count} API(s) for {len(top_keywords)} keywords ({len(all_tasks)} total requests)")
+        logger.info(f"   Pinterest authenticated: {pinterest_authenticated}, consent: {pinterest_consent}")
         
         if not all_tasks:
             logger.error("❌ No API keys configured! Falling back to local images in backend/images.")
