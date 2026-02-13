@@ -3,8 +3,36 @@ import secrets
 from typing import Optional
 import httpx
 from fastapi import HTTPException
-import redis
 from config.settings import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Try to import Redis, but fall back to in-memory cache if unavailable
+try:
+    import redis
+    REDIS_AVAILABLE = True
+except ImportError:
+    REDIS_AVAILABLE = False
+
+
+class InMemoryCache:
+    """Simple in-memory cache for development without Redis"""
+    def __init__(self):
+        self.store = {}
+
+    def get(self, key: str) -> Optional[bytes]:
+        return self.store.get(key)
+
+    def set(self, key: str, value: str):
+        self.store[key] = value.encode() if isinstance(value, str) else value
+
+    def setex(self, key: str, ttl: int, value: str):
+        """Set with TTL (simplified - no actual expiration)"""
+        self.set(key, value)
+
+    def delete(self, key: str):
+        self.store.pop(key, None)
 
 
 class PinterestOAuthService:
@@ -18,7 +46,18 @@ class PinterestOAuthService:
         self.client_secret = settings.pinterest_client_secret
         self.client_key = settings.pinterest_client_key  # API key for direct authentication
         self.redirect_uri = settings.pinterest_redirect_uri
-        self.redis_client = redis.from_url(settings.redis_url)
+
+        # Initialize Redis client or fall back to in-memory cache
+        try:
+            if REDIS_AVAILABLE:
+                self.redis_client = redis.from_url(settings.redis_url)
+                self.redis_client.ping()  # Test connection
+                logger.info("Redis connected successfully")
+            else:
+                raise Exception("Redis package not installed")
+        except Exception as e:
+            logger.warning(f"Redis unavailable ({e}), using in-memory cache for development")
+            self.redis_client = InMemoryCache()
 
     def get_authorization_url(self, state: Optional[str] = None) -> str:
         """Generate Pinterest authorization URL"""
