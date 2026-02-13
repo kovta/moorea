@@ -65,6 +65,9 @@ class PinterestOAuthService:
 
     def get_authorization_url(self, state: Optional[str] = None) -> str:
         """Generate Pinterest authorization URL"""
+        if not self.client_id:
+            raise HTTPException(status_code=500, detail="Pinterest client_id not configured")
+
         if not state:
             state = secrets.token_urlsafe(32)
 
@@ -79,7 +82,9 @@ class PinterestOAuthService:
             "state": state
         }
 
-        query_string = "&".join(f"{k}={v}" for k, v in params.items())
+        # Filter out None values before building query string
+        query_params = {k: v for k, v in params.items() if v is not None}
+        query_string = "&".join(f"{k}={v}" for k, v in query_params.items())
         return f"{self.AUTH_URL}?{query_string}"
 
     async def exchange_code_for_token(self, code: str, state: str) -> dict:
