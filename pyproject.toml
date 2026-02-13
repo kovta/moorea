@@ -1,0 +1,8 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel>=0.40", "setuptools_scm>=7.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "moorea"
+version = "1.0.0"
+description = "Moodboard generation platform"

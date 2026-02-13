@@ -1,0 +1,4 @@
+# Build dependencies needed before installing packages that build from source
+setuptools>=65.0
+wheel>=0.40
+setuptools_scm>=7.0
