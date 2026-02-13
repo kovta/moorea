@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python313", "pip", "git"]
+nixPkgs = ["python311", "pip", "git"]
 
 [phases.install]
 cmds = [
@@ -10,7 +10,3 @@ cmds = [
 
 [start]
 cmd = "python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
-
-
-
-
