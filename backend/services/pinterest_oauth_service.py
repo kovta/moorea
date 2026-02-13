@@ -197,9 +197,12 @@ class PinterestOAuthService:
         token = self.get_access_token()
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        # Fallback to API key authentication if configured
+        # For API key, add it as a query parameter (Pinterest doesn't support Bearer token for API keys)
         elif self.client_key:
-            headers["Authorization"] = f"Bearer {self.client_key}"
+            # Add API key as query parameter
+            separator = "&" if "?" in endpoint else "?"
+            endpoint = f"{endpoint}{separator}access_token={self.client_key}"
+            logger.info(f"Using Pinterest API key authentication")
         else:
             raise HTTPException(status_code=401, detail="No valid Pinterest access token or API key configured")
 
