@@ -385,12 +385,13 @@ class MoodboardService:
             else:
                 logger.warning(f"⚠️ Pexels disabled or API key not configured, skipping Pexels for '{keyword}'")
             
-            # Add Pinterest if API key is configured or user consented with OAuth
-            if await pinterest_client.is_authenticated():
-                logger.info(f"   📌 Including Pinterest for '{keyword}'")
-                tasks.append(pinterest_client.search_and_extract_images(keyword, max_images=images_per_keyword))
-            elif pinterest_consent:
-                logger.warning(f"   ⚠️ Pinterest consent given but API not authenticated for '{keyword}'")
+            # Add Pinterest if API key is configured (no OAuth required when using API key)
+            try:
+                if await pinterest_client.is_authenticated():
+                    logger.info(f"   📌 Including Pinterest for '{keyword}'")
+                    tasks.append(pinterest_client.search_and_extract_images(keyword, max_images=images_per_keyword))
+            except Exception as e:
+                logger.warning(f"   ⚠️ Pinterest API error for '{keyword}': {str(e)}")
             
             all_tasks.extend(tasks)
         
