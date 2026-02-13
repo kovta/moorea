@@ -70,22 +70,31 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
         {imagesToShow.map((image, index) => {
           // Determine if image should be clickable and what link to use
           const isPinterest = image.source_api === 'pinterest';
-          const linkUrl = isPinterest && image.pinterest_url 
-            ? image.pinterest_url 
+          const linkUrl = isPinterest && image.pinterest_url
+            ? image.pinterest_url
             : image.source_url || image.url;
           const shouldLink = isPinterest && image.pinterest_url;
+
+          // Source URL for copy-able attribution overlay
+          const sourceUrl = (() => {
+            if (image.source_api === 'original') return null;
+            if (isPinterest) {
+              return image.pinterest_url || `https://www.pinterest.com/pin/${image.id}/`;
+            }
+            return image.source_url || null;
+          })();
 
           // Image content component
           const ImageContent = (
             <>
               {/* Main Image */}
-              <img 
-                src={image.url} 
+              <img
+                src={image.url}
                 alt={`Moodboard inspiration ${index + 1}`}
                 loading="lazy"
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              
+
               {/* Overlay that appears on hover */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="absolute bottom-0 left-0 right-0 p-3">
@@ -100,26 +109,21 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
                           Board: {image.pinterest_board}
                         </p>
                       )}
-                      {shouldLink && (
-                        <p className="text-white/70 text-xs mt-1 underline">
-                          Click to view on Pinterest →
-                        </p>
-                      )}
                     </div>
                   )}
-                  
+
                   {/* Photographer credit */}
                   {image.photographer && (
                     <p className="text-white text-xs font-medium mb-1">
                       📸 {image.photographer}
                     </p>
                   )}
-                  
+
                   {/* Similarity score */}
                   {image.similarity_score && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 mb-1">
                       <div className="flex-1 bg-white/20 rounded-full h-1">
-                        <div 
+                        <div
                           className="bg-white h-1 rounded-full transition-all duration-500"
                           style={{ width: `${image.similarity_score * 100}%` }}
                         />
@@ -128,6 +132,17 @@ const MoodboardDisplay: React.FC<MoodboardDisplayProps> = ({ result, originalIma
                         {Math.round(image.similarity_score * 100)}%
                       </span>
                     </div>
+                  )}
+
+                  {/* Copyable source URL */}
+                  {sourceUrl && (
+                    <p
+                      className="text-white/60 text-xs break-all leading-tight"
+                      style={{ userSelect: 'text', cursor: 'text', pointerEvents: 'auto' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {sourceUrl}
+                    </p>
                   )}
                 </div>
               </div>
