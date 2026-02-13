@@ -3,7 +3,7 @@ nixPkgs = ["python311", "pip", "git"]
 
 [phases.install]
 cmds = [
-  "pip install --upgrade pip setuptools wheel setuptools_scm",
+  "pip install --upgrade pip 'setuptools<82.0.0' wheel setuptools_scm",
   "pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu",
   "pip install --no-build-isolation -r requirements.txt"
 ]
