@@ -22,13 +22,17 @@ class InMemoryCache:
         self.store = {}
 
     def get(self, key: str) -> Optional[bytes]:
-        return self.store.get(key)
+        value = self.store.get(key)
+        if value is None:
+            return None
+        return value.encode() if isinstance(value, str) else value
 
     def set(self, key: str, value: str):
-        self.store[key] = value.encode() if isinstance(value, str) else value
+        """Store value as string (will be encoded on retrieval)"""
+        self.store[key] = value if isinstance(value, str) else value.decode() if isinstance(value, bytes) else str(value)
 
     def setex(self, key: str, ttl: int, value: str):
-        """Set with TTL (simplified - no actual expiration)"""
+        """Set with TTL (simplified - no actual expiration in memory cache)"""
         self.set(key, value)
 
     def delete(self, key: str):
