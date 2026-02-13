@@ -78,7 +78,7 @@ class PinterestOAuthService:
             "response_type": "code",
             "client_id": self.client_id,
             "redirect_uri": self.redirect_uri,
-            "scope": "pins:read",  # Adjust scopes as needed
+            "scope": "pins:read boards:read",  # Added boards:read for full Pinterest API access
             "state": state
         }
 
