@@ -53,7 +53,10 @@ async def pinterest_oauth_callback(
 ):
     """Handle Pinterest OAuth callback and exchange code for token."""
     try:
+        logger.info(f"Pinterest OAuth callback received: code={code[:20]}..., state={state[:20]}...")
         token_data = await pinterest_oauth.exchange_code_for_token(code, state)
+
+        logger.info(f"Token exchange successful, token_data keys: {token_data.keys()}")
 
         # Return success response (you might want to redirect to frontend)
         return {
@@ -62,9 +65,11 @@ async def pinterest_oauth_callback(
             "scope": token_data.get("scope")
         }
 
-    except HTTPException:
+    except HTTPException as he:
+        logger.error(f"HTTPException in callback: {he.detail}")
         raise
     except Exception as e:
+        logger.error(f"Exception in callback: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"OAuth callback failed: {str(e)}")
 
 @router.get("/status")
