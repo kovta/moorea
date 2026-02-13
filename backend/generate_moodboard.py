@@ -201,13 +201,37 @@ def generate_html_moodboard(aesthetic_name, description, keywords, images, origi
     # Create image grid HTML
     images_html = ""
     for i, img in enumerate(images):
-        images_html += f'''
+        # Prefer explicit source_url when available; fall back to pinterest_url
+        source_url = getattr(img, 'source_url', None) or getattr(img, 'pinterest_url', None)
+
+        # Photographer attribution (optionally wrapped in anchor)
+        if img.photographer:
+            if source_url:
+                photographer_html = f'<p class="photographer"><a href="{source_url}" target="_blank" rel="noopener noreferrer">Photo by {img.photographer}</a></p>'
+            else:
+                photographer_html = f'<p class="photographer">Photo by {img.photographer}</p>'
+        else:
+            photographer_html = ''
+
+        if source_url:
+            images_html += f'''
         <div class="image-item">
-            <img src="{img.url}" alt="Moodboard inspiration" 
-                 loading="lazy" onerror="this.style.display='none'">
+            <a href="{source_url}" target="_blank" rel="noopener noreferrer">
+                <img src="{img.url}" alt="Moodboard inspiration" loading="lazy" onerror="this.style.display='none'">
+            </a>
             <div class="image-overlay">
                 <p class="image-source">{img.source_api.title()}</p>
-                {f'<p class="photographer">Photo by {img.photographer}</p>' if img.photographer else ''}
+                {photographer_html}
+            </div>
+        </div>
+        '''
+        else:
+            images_html += f'''
+        <div class="image-item">
+            <img src="{img.url}" alt="Moodboard inspiration" loading="lazy" onerror="this.style.display='none'">
+            <div class="image-overlay">
+                <p class="image-source">{img.source_api.title()}</p>
+                {photographer_html}
             </div>
         </div>
         '''

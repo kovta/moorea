@@ -30,6 +30,7 @@ class ImageCandidate(BaseModel):
     thumbnail_url: Optional[str] = Field(None, description="Thumbnail image URL")
     photographer: Optional[str] = Field(None, description="Photographer name for attribution")
     source_api: str = Field(..., description="Source API (unsplash, pexels, flickr, pinterest)")
+    source_url: Optional[str] = Field(None, description="Original source page URL for attribution")
     similarity_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="CLIP similarity score")
     download_location: Optional[str] = Field(None, description="Unsplash download tracking URL")
     

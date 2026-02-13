@@ -13,10 +13,14 @@ load_dotenv()
 # Database URL - Supports Supabase and other PostgreSQL providers
 # Priority: DATABASE_URL env var > settings.database_url > localhost fallback
 DATABASE_URL = (
-    os.getenv("DATABASE_URL") 
+    os.getenv("DATABASE_URL")
     or os.getenv("SUPABASE_DATABASE_URL")  # Supabase-specific env var
-    or "postgresql://kovacstamaspal@localhost/moorea"  # Local fallback
 )
+
+# If no DATABASE_URL is provided, fall back to a local SQLite file for easy local development
+if not DATABASE_URL:
+    DATABASE_URL = "sqlite:///./dev.db"
+    print("INFO: No DATABASE_URL found in environment - using local SQLite fallback './dev.db' for development.")
 
 # Log database URL (mask password for security)
 if DATABASE_URL:
@@ -34,17 +38,27 @@ else:
 
 # Create engine with connection pooling and retry logic
 # This prevents connection exhaustion and handles temporary connection failures
-engine = create_engine(
-    DATABASE_URL,
-    pool_size=5,  # Number of connections to keep in pool
-    max_overflow=10,  # Additional connections that can be created on demand
-    pool_pre_ping=True,  # Verify connections before using (handles dropped connections)
-    pool_recycle=3600,  # Recycle connections after 1 hour (prevents stale connections)
-    connect_args={
-        "connect_timeout": 10,  # 10 second connection timeout
-        "options": "-c statement_timeout=30000"  # 30 second query timeout
-    }
-)
+# Create engine with sensible defaults depending on DB backend
+if DATABASE_URL.startswith("sqlite"):
+    # SQLite local development engine
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        echo=False,
+    )
+else:
+    # Postgres / production engine with pooling and timeouts
+    engine = create_engine(
+        DATABASE_URL,
+        pool_size=5,
+        max_overflow=10,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        connect_args={
+            "connect_timeout": 10,
+            "options": "-c statement_timeout=30000"
+        }
+    )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

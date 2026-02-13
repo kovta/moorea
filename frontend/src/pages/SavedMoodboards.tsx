@@ -122,25 +122,57 @@ const SavedMoodboards: React.FC = () => {
                 <div className="mb-4">
                   <div className="grid grid-cols-3 gap-1 rounded-lg overflow-hidden">
                     {/* Top row: images 1-3 */}
-                    {moodboard.images.slice(1, 4).map((image, index) => (
-                      <div key={index} className="aspect-square bg-gray-100">
+                    {moodboard.images.slice(1, 4).map((image, index) => {
+                      const imgAny: any = image as any;
+                      const srcApi = imgAny.source_api || imgAny.source || '';
+                      const isPinterest = typeof srcApi === 'string' && srcApi.toLowerCase().includes('pinterest');
+                      const linkUrl = imgAny.pinterest_url || imgAny.source_url || (isPinterest ? imgAny.url : null);
+                      const ImgEl = (
                         <img
                           src={image.url}
                           alt={`${moodboard.title} preview ${index + 1}`}
                           className="w-full h-full object-cover"
                           loading="lazy"
                         />
-                      </div>
-                    ))}
+                      );
+
+                      return (
+                        <div key={index} className="aspect-square bg-gray-100">
+                          {linkUrl ? (
+                            <a href={linkUrl} target="_blank" rel="noopener noreferrer" title="View on Pinterest">
+                              {ImgEl}
+                            </a>
+                          ) : (
+                            ImgEl
+                          )}
+                        </div>
+                      );
+                    })}
                     {/* Center position - show original uploaded image */}
                     <div className="aspect-square bg-gray-100 relative">
                       {moodboard.images.length > 0 && (
-                        <img
-                          src={moodboard.images[0].url}
-                          alt={`${moodboard.title} original`}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
+                        (() => {
+                          const img: any = moodboard.images[0] as any;
+                          const srcApi = img.source_api || img.source || '';
+                          const isPinterest = typeof srcApi === 'string' && srcApi.toLowerCase().includes('pinterest');
+                          const linkUrl = img.pinterest_url || img.source_url || (isPinterest ? img.url : null);
+                          const ImgEl = (
+                            <img
+                              src={img.url}
+                              alt={`${moodboard.title} original`}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          );
+
+                          return linkUrl ? (
+                            <a href={linkUrl} target="_blank" rel="noopener noreferrer" title="View on Pinterest">
+                              {ImgEl}
+                            </a>
+                          ) : (
+                            ImgEl
+                          );
+                        })()
                       )}
                       {/* Add a subtle indicator that this is the original */}
                       <div className="absolute top-1 right-1 bg-white/80 rounded-full p-1">
@@ -148,16 +180,32 @@ const SavedMoodboards: React.FC = () => {
                       </div>
                     </div>
                     {/* Bottom row: images 4-6 */}
-                    {moodboard.images.slice(4, 7).map((image, index) => (
-                      <div key={index + 4} className="aspect-square bg-gray-100">
+                    {moodboard.images.slice(4, 7).map((image, index) => {
+                      const imgAny: any = image as any;
+                      const srcApi = imgAny.source_api || imgAny.source || '';
+                      const isPinterest = typeof srcApi === 'string' && srcApi.toLowerCase().includes('pinterest');
+                      const linkUrl = imgAny.pinterest_url || imgAny.source_url || (isPinterest ? imgAny.url : null);
+                      const ImgEl = (
                         <img
                           src={image.url}
                           alt={`${moodboard.title} preview ${index + 4}`}
                           className="w-full h-full object-cover"
                           loading="lazy"
                         />
-                      </div>
-                    ))}
+                      );
+
+                      return (
+                        <div key={index + 4} className="aspect-square bg-gray-100">
+                          {linkUrl ? (
+                            <a href={linkUrl} target="_blank" rel="noopener noreferrer" title="View on Pinterest">
+                              {ImgEl}
+                            </a>
+                          ) : (
+                            ImgEl
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -170,6 +218,16 @@ const SavedMoodboards: React.FC = () => {
                   {moodboard.description && (
                     <p className="text-gray-600 text-sm line-clamp-2">
                       {moodboard.description}
+                    </p>
+                  )}
+
+                  {/* Attribution note when Pinterest images are present */}
+                  {moodboard.images && moodboard.images.some((img: any) => {
+                    const srcApi = (img as any).source_api || (img as any).source || '';
+                    return typeof srcApi === 'string' && srcApi.toLowerCase().includes('pinterest');
+                  }) && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Some images are sourced from Pinterest — click images to view the original Pin on Pinterest.
                     </p>
                   )}
 

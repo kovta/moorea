@@ -16,6 +16,7 @@ class PinterestOAuthService:
     def __init__(self):
         self.client_id = settings.pinterest_client_id
         self.client_secret = settings.pinterest_client_secret
+        self.client_key = settings.pinterest_client_key  # API key for direct authentication
         self.redirect_uri = settings.pinterest_redirect_uri
         self.redis_client = redis.from_url(settings.redis_url)
 
@@ -123,24 +124,26 @@ class PinterestOAuthService:
         return token.decode() if token else None
 
     async def make_authenticated_request(self, method: str, endpoint: str, **kwargs) -> dict:
-        """Make authenticated API request with automatic token refresh"""
-        token = self.get_access_token()
-
-        if not token:
-            # Try to refresh token
-            token = await self.refresh_access_token()
-            if not token:
-                raise HTTPException(status_code=401, detail="No valid Pinterest access token")
-
+        """Make authenticated API request with automatic token refresh or API key auth"""
         headers = kwargs.get("headers", {})
-        headers["Authorization"] = f"Bearer {token}"
+
+        # Try OAuth token first
+        token = self.get_access_token()
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        # Fallback to API key authentication if configured
+        elif self.client_key:
+            headers["Authorization"] = f"Bearer {self.client_key}"
+        else:
+            raise HTTPException(status_code=401, detail="No valid Pinterest access token or API key configured")
+
         kwargs["headers"] = headers
 
         async with httpx.AsyncClient() as client:
             response = await client.request(method, f"{self.BASE_URL}{endpoint}", **kwargs)
 
             # If token expired, try refreshing once
-            if response.status_code == 401:
+            if response.status_code == 401 and not self.client_key:
                 new_token = await self.refresh_access_token()
                 if new_token:
                     headers["Authorization"] = f"Bearer {new_token}"

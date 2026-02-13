@@ -36,14 +36,17 @@ class Settings(BaseSettings):
     unsplash_access_key: Optional[str] = None
     pexels_api_key: Optional[str] = None
     flickr_api_key: Optional[str] = None
+    # Feature toggles
+    enable_pexels: bool = True
     
     # Pinterest API
     pinterest_access_token: Optional[str] = None
     pinterest_client_id: Optional[str] = None
     pinterest_client_secret: Optional[str] = None
+    pinterest_client_key: Optional[str] = None  # Alternative name for API key
     pinterest_redirect_uri: str = "http://localhost:3000/auth/pinterest/callback"
     backend_url: str = "http://localhost:8002"  # Backend API URL for OAuth redirects
-    use_mock_pinterest: bool = True  # Toggle between mock and real API
+    use_mock_pinterest: bool = False  # Toggle between mock and real API
     
     # reCAPTCHA
     recaptcha_secret_key: Optional[str] = None

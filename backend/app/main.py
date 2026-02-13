@@ -6,11 +6,13 @@ from datetime import datetime
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from config import settings
 from models import HealthResponse
 from services.cache_service import cache_service
-from app.routes import auth, pinterest_auth
+from app.routes import auth, pinterest_auth, providers
 from app.routes.waitlist import router as waitlist_router
 from database import create_tables
 
@@ -104,9 +106,11 @@ else:
     # Development: Allow localhost and common dev origins
     allowed_origins = [
         "http://localhost:3000",  # React dev server
+        "http://localhost:3002",  # Alternate React dev port used in some dev setups
         "http://localhost:3001",  # Alternative React port
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002",
     ]
     logger.warning("⚠️  ALLOWED_ORIGINS not set - using development defaults. Set this in production!")
 
@@ -135,6 +139,19 @@ else:
 app.include_router(auth.router, tags=["authentication"])
 app.include_router(waitlist_router, tags=["waitlist"])
 app.include_router(pinterest_auth.router, tags=["pinterest-oauth"])
+app.include_router(providers.router, prefix="/api/v1", tags=["providers"])
+
+# Serve static files (local image testing)
+try:
+    backend_dir = Path(__file__).parent.parent
+    images_dir = backend_dir / "images"
+    if images_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(images_dir)), name="static")
+        logger.info(f"📁 Mounted static images at /static from {images_dir}")
+    else:
+        logger.warning(f"⚠️  Images directory not found at {images_dir}")
+except Exception as e:
+    logger.warning(f"⚠️  Failed to mount static files: {e}")
 
 
 @app.get("/", response_model=HealthResponse)

@@ -9,12 +9,16 @@ from uuid import UUID
 from config import settings
 from models import JobStatus, MoodboardResult, AestheticScore, ImageCandidate
 from services.job_service import job_service
-from services.aesthetic_service import aesthetic_service
 from services.unsplash_client import unsplash_client
 from services.pexels_client import pexels_client
 from services.flickr_client import flickr_client
 from services.pinterest_client import pinterest_client
-from services.clip_service import clip_service
+"""
+NOTE: clip_service and aesthetic_service import heavy ML dependencies (torch/CLIP).
+To allow local runs without ML packages, these services are imported lazily inside
+methods and guarded with fallbacks. This prevents ImportError at module import time
+so that moodboard routes can be enabled without ML installed.
+"""
 
 logger = logging.getLogger(__name__)
 
@@ -89,9 +93,35 @@ class MoodboardService:
     async def _classify_aesthetics(self, image_content: bytes) -> List[AestheticScore]:
         """Classify image aesthetics using CLIP with confidence threshold."""
         try:
+            # Lazy import aesthetic_service to avoid hard dependency at module load
+            try:
+                from services.aesthetic_service import aesthetic_service
+            except Exception as e:
+                logger.warning(f"Aesthetic service unavailable, using fallback: {e}")
+                return [
+                    AestheticScore(
+                        name="minimalist",
+                        score=0.60,
+                        description="Clean, simple, functional design"
+                    )
+                ]
+
             # Get aesthetic vocabulary
             vocabulary = await aesthetic_service.get_vocabulary()
             
+            # Lazy import CLIP service (heavy ML deps)
+            try:
+                from services.clip_service import clip_service
+            except Exception as e:
+                logger.warning(f"CLIP service unavailable, using fallback: {e}")
+                return [
+                    AestheticScore(
+                        name="minimalist",
+                        score=0.60,
+                        description="Clean, simple, functional design"
+                    )
+                ]
+
             # Use CLIP for zero-shot classification
             all_scores = await clip_service.classify_aesthetics(image_content, vocabulary)
             
@@ -278,28 +308,50 @@ class MoodboardService:
         """Expand aesthetics to search keywords with intelligent filtering."""
         keywords = []
         negative_keywords = set()
-        
+
+        # Lazy import aesthetic_service; fallback to generic keywords when unavailable
+        aesthetic_service_available = True
+        try:
+            from services.aesthetic_service import aesthetic_service
+        except Exception as e:
+            aesthetic_service_available = False
+            logger.warning(f"Aesthetic service unavailable during keyword expansion, using fallback keywords: {e}")
+
         for aesthetic in aesthetics:
-            # Get positive keywords
-            aesthetic_keywords = await aesthetic_service.get_keywords_for_aesthetic(aesthetic.name)
-            keywords.extend(aesthetic_keywords)
-            
-            # Get negative keywords to avoid
-            aesthetic_negatives = await aesthetic_service.get_negative_keywords_for_aesthetic(aesthetic.name)
-            negative_keywords.update(aesthetic_negatives)
-            
-            # Get color palette for intelligent filtering
-            color_palette = await aesthetic_service.get_color_palette_for_aesthetic(aesthetic.name)
-            if color_palette:
-                logger.info(f"Using color palette for {aesthetic.name}: {color_palette}")
-        
+            if aesthetic_service_available:
+                try:
+                    # Get positive keywords
+                    aesthetic_keywords = await aesthetic_service.get_keywords_for_aesthetic(aesthetic.name)
+                    keywords.extend(aesthetic_keywords)
+
+                    # Get negative keywords to avoid
+                    aesthetic_negatives = await aesthetic_service.get_negative_keywords_for_aesthetic(aesthetic.name)
+                    negative_keywords.update(aesthetic_negatives)
+
+                    # Get color palette for intelligent filtering
+                    color_palette = await aesthetic_service.get_color_palette_for_aesthetic(aesthetic.name)
+                    if color_palette:
+                        logger.info(f"Using color palette for {aesthetic.name}: {color_palette}")
+                except Exception as ex:
+                    logger.warning(f"Error using aesthetic service for '{aesthetic.name}', falling back: {ex}")
+                    # Fallback generic keywords for the aesthetic name
+                    name = aesthetic.name.replace('_', ' ')
+                    keywords.extend([f"{name} outfit", f"{name} fashion", f"{name} style"])
+            else:
+                # Fallback generic keywords when service unavailable
+                name = aesthetic.name.replace('_', ' ')
+                keywords.extend([f"{name} outfit", f"{name} fashion", f"{name} style"])
+
+        # If still no keywords, add minimalist fallbacks
+        if not keywords:
+            keywords = ["minimalist outfit", "clean fashion", "neutral wardrobe"]
+
         # Remove duplicates and apply negative filtering
         unique_keywords = []
         for keyword in keywords:
-            # Skip if keyword contains negative terms
             if not any(neg in keyword.lower() for neg in negative_keywords):
                 unique_keywords.append(keyword)
-        
+
         return unique_keywords, list(negative_keywords)
     
     async def _fetch_candidates(self, keywords: List[str], pinterest_consent: bool = False) -> List[ImageCandidate]:
@@ -313,7 +365,7 @@ class MoodboardService:
         logger.info(f"🔍 Fetching images for keywords: {top_keywords}")
         logger.info(f"   Images per keyword: {images_per_keyword}")
         logger.info(f"   Unsplash API key configured: {bool(settings.unsplash_access_key)}")
-        logger.info(f"   Pexels API key configured: {bool(settings.pexels_api_key)}")
+        logger.info(f"   Pexels API key configured: {bool(settings.pexels_api_key)}; enabled: {getattr(settings, 'enable_pexels', True)}")
         logger.info(f"   Pinterest consent: {pinterest_consent}")
         
         # ⚡ Use multiple APIs with fallback: Unsplash → Pexels → Pinterest
@@ -328,34 +380,37 @@ class MoodboardService:
                 logger.warning(f"⚠️ Unsplash API key not configured, skipping Unsplash for '{keyword}'")
             
             # Try Pexels as fallback
-            if settings.pexels_api_key:
+            if settings.pexels_api_key and getattr(settings, 'enable_pexels', True):
                 tasks.append(pexels_client.search_photos(keyword, per_page=images_per_keyword))
             else:
-                logger.warning(f"⚠️ Pexels API key not configured, skipping Pexels for '{keyword}'")
+                logger.warning(f"⚠️ Pexels disabled or API key not configured, skipping Pexels for '{keyword}'")
             
-            # Add Pinterest if user consented and OAuth is authenticated
-            if pinterest_consent and await pinterest_client.is_authenticated():
+            # Add Pinterest if API key is configured or user consented with OAuth
+            if await pinterest_client.is_authenticated():
+                logger.info(f"   📌 Including Pinterest for '{keyword}'")
                 tasks.append(pinterest_client.search_and_extract_images(keyword, max_images=images_per_keyword))
+            elif pinterest_consent:
+                logger.warning(f"   ⚠️ Pinterest consent given but API not authenticated for '{keyword}'")
             
             all_tasks.extend(tasks)
         
         # Execute all API calls concurrently with shorter timeout
         api_count = sum([
             bool(settings.unsplash_access_key),
-            bool(settings.pexels_api_key),
+            bool(settings.pexels_api_key and getattr(settings, 'enable_pexels', True)),
             bool(pinterest_consent and await pinterest_client.is_authenticated())
         ])
         logger.info(f"⚡ SPEED MODE: Fetching from {api_count} API(s) for {len(top_keywords)} keywords ({len(all_tasks)} total requests)")
         
         if not all_tasks:
-            logger.error("❌ No API keys configured! Cannot fetch images. Please set UNSPLASH_ACCESS_KEY or PEXELS_API_KEY in Railway.")
-            return []
+            logger.error("❌ No API keys configured! Falling back to local images in backend/images.")
+            return await self._local_folder_candidates()
         
         try:
             # Use asyncio.wait_for with shorter timeout for speed
             results = await asyncio.wait_for(
                 asyncio.gather(*all_tasks, return_exceptions=True),
-                timeout=5.0  # Increased to 5 seconds to allow more time
+                timeout=8.0  # Allow a bit more time for provider responses
             )
             
             successful_count = 0
@@ -388,11 +443,63 @@ class MoodboardService:
                     break
         
         logger.info(f"⚡ Fast fetch: {len(unique_candidates)} unique candidates (target: {settings.max_candidates})")
-        
+
+        # Fallback: if no candidates found, try generic keywords via Unsplash only
+        if not unique_candidates:
+            logger.warning("⚠️ No candidates from primary keywords. Trying generic fallback keywords via Unsplash...")
+            fallback_keywords = ["minimalist outfit", "vintage fashion", "cottagecore dress"]
+            for kw in fallback_keywords:
+                try:
+                    res = await unsplash_client.search_photos(kw, per_page=4)
+                    for candidate in res:
+                        if candidate.url not in seen_urls:
+                            seen_urls.add(candidate.url)
+                            unique_candidates.append(candidate)
+                            if len(unique_candidates) >= settings.max_candidates:
+                                break
+                    logger.info(f"  Fallback '{kw}': {len(res)} images; total unique now {len(unique_candidates)}")
+                except Exception as ex:
+                    logger.warning(f"  Fallback Unsplash error for '{kw}': {ex}")
+
+        # Final fallback: local folder images served via /static
+        if not unique_candidates:
+            logger.warning("⚠️ Still no candidates; using local folder images.")
+            unique_candidates = await self._local_folder_candidates()
+
         if not unique_candidates:
             logger.error("❌ No image candidates found! Check API keys and network connectivity.")
-        
+
         return unique_candidates
+
+    async def _local_folder_candidates(self) -> List[ImageCandidate]:
+        """Build candidates from local backend/images folder and serve via /static."""
+        try:
+            from pathlib import Path
+            backend_dir = Path(__file__).parent.parent
+            images_dir = backend_dir / "images"
+            if not images_dir.exists():
+                logger.error(f"Local images directory not found: {images_dir}")
+                return []
+            exts = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+            files = [p for p in images_dir.iterdir() if p.is_file() and p.suffix.lower() in exts]
+            files = files[:settings.final_moodboard_size]
+            base = settings.backend_url.rstrip("/")
+            candidates: List[ImageCandidate] = []
+            for f in files:
+                url = f"{base}/static/{f.name}"
+                candidates.append(ImageCandidate(
+                    id=f"local_{f.name}",
+                    url=url,
+                    thumbnail_url=url,
+                    photographer=None,
+                    source_api="local",
+                    source_url=url
+                ))
+            logger.info(f"Local folder candidates: {len(candidates)} images from {images_dir}")
+            return candidates
+        except Exception as e:
+            logger.error(f"Local folder candidates error: {e}")
+            return []
     
     async def _rerank_candidates(self, original_image: bytes, 
                                 candidates: List[ImageCandidate]) -> List[ImageCandidate]:
@@ -404,6 +511,13 @@ class MoodboardService:
             
             logger.info(f"🔄 Re-ranking {len(candidates)} candidates using CLIP similarity")
             
+            # Lazy import CLIP service to avoid hard dependency at import time
+            try:
+                from services.clip_service import clip_service
+            except Exception as e:
+                logger.warning(f"CLIP service unavailable, returning top candidates without scoring: {e}")
+                return candidates[:settings.final_moodboard_size]
+
             # Get original image embedding
             original_embedding = await clip_service.get_image_embedding(original_image)
             logger.info(f"✅ Got original image embedding")
@@ -472,6 +586,12 @@ class MoodboardService:
     async def _apply_classification_filters(self, image_content: bytes, all_scores: List[AestheticScore]) -> List[AestheticScore]:
         """Apply post-processing filters to fix common misclassifications - optimized for speed."""
         try:
+            # Lazy import clip_service; if unavailable, skip filters
+            try:
+                from services.clip_service import clip_service
+            except Exception as e:
+                logger.warning(f"CLIP service unavailable during post-filters, skipping filters: {e}")
+                return all_scores
             # SPEED OPTIMIZATION: Only apply filters if problematic aesthetics are in top 5
             top_aesthetics = [score.name for score in all_scores[:5]]
             
