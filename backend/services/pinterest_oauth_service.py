@@ -89,30 +89,47 @@ class PinterestOAuthService:
 
     async def exchange_code_for_token(self, code: str, state: str) -> dict:
         """Exchange authorization code for access token"""
-        # Verify state
-        stored_state = self.redis_client.get(f"pinterest_oauth_state:{state}")
-        if not stored_state:
-            raise HTTPException(status_code=400, detail="Invalid or expired state")
+        try:
+            # Verify state
+            stored_state = self.redis_client.get(f"pinterest_oauth_state:{state}")
+            if not stored_state:
+                logger.error(f"State verification failed: no stored state for {state}")
+                raise HTTPException(status_code=400, detail="Invalid or expired state")
 
-        # Remove used state
-        self.redis_client.delete(f"pinterest_oauth_state:{state}")
+            # Remove used state
+            self.redis_client.delete(f"pinterest_oauth_state:{state}")
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{self.BASE_URL}/v5/oauth/token",
-                data={
-                    "grant_type": "authorization_code",
-                    "code": code,
-                    "redirect_uri": self.redirect_uri
-                },
-                auth=(self.client_id, self.client_secret)
-            )
+            # Verify credentials are configured
+            if not self.client_id or not self.client_secret:
+                logger.error(f"Pinterest credentials not configured: client_id={bool(self.client_id)}, client_secret={bool(self.client_secret)}")
+                raise HTTPException(status_code=500, detail="Pinterest credentials not configured")
 
-            if response.status_code != 200:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Token exchange failed: {response.text}"
+            # Ensure auth tuple has strings, not bytes
+            client_id_str = self.client_id.decode() if isinstance(self.client_id, bytes) else str(self.client_id)
+            client_secret_str = self.client_secret.decode() if isinstance(self.client_secret, bytes) else str(self.client_secret)
+
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.BASE_URL}/v5/oauth/token",
+                    data={
+                        "grant_type": "authorization_code",
+                        "code": code,
+                        "redirect_uri": self.redirect_uri
+                    },
+                    auth=(client_id_str, client_secret_str)
                 )
+
+                if response.status_code != 200:
+                    logger.error(f"Token exchange failed with status {response.status_code}: {response.text}")
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Token exchange failed: {response.text}"
+                    )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"OAuth token exchange error: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"OAuth callback failed: {str(e)}")
 
             token_data = response.json()
 
