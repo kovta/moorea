@@ -1,3 +1,8 @@
+# Build dependencies (must be first to avoid CLIP build errors)
+setuptools>=65.0
+wheel>=0.40
+setuptools_scm>=7.0
+
 # Core FastAPI (updated for Pydantic v2 compatibility)
 fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
