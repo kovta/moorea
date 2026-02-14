@@ -8,7 +8,7 @@ import asyncio
 import numpy as np
 from PIL import Image
 import torch
-from transformers import AutoProcessor, AutoModel
+from transformers import AutoModel, AutoImageProcessor, CLIPTokenizer
 
 from config import settings
 from models import AestheticScore
@@ -20,20 +20,21 @@ logger = logging.getLogger(__name__)
 class CLIPService:
     """Service for vision-language model-based aesthetic classification and similarity.
 
-    Uses Qwen3-VL-Embedding (state-of-the-art multimodal embedding model)
-    as replacement for CLIP with better performance on image-text retrieval.
+    Uses SigLIP (Simple Image-text pairing with Language-Image PreTraining)
+    as replacement for CLIP with better performance on image-text matching.
     """
 
     def __init__(self):
         self.model = None
-        self.processor = None
+        self.image_processor = None
+        self.tokenizer = None
         self.device = None
         self._model_loaded = False
         self._text_embeddings_cache = {}  # Cache for pre-computed text embeddings
-        self.model_name = "Qwen/Qwen3-VL-Embedding-2B"  # Using 2B for balanced performance/size
+        self.model_name = "google/siglip-so400m-patch14-384"  # SigLIP-SO400M for balanced performance/size
 
     async def initialize(self):
-        """Initialize Qwen3-VL-Embedding model."""
+        """Initialize SigLIP model."""
         try:
             logger.info(f"Loading vision-language model: {self.model_name}")
 
@@ -68,8 +69,9 @@ class CLIPService:
             # Create text prompts using actual keywords
             text_prompts = await self._create_text_prompts(vocabulary)
 
-            # Encode text using Qwen processor and model
-            inputs = self.processor(text=text_prompts, padding=True, return_tensors="pt").to(self.device)
+            # Encode text using tokenizer and model
+            inputs = self.tokenizer(text_prompts, padding=True, return_tensors="pt")
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
             with torch.no_grad():
                 text_features = self.model.get_text_features(**inputs)
@@ -86,14 +88,19 @@ class CLIPService:
             # Continue without pre-computed embeddings (fallback to on-demand)
     
     def _load_model(self):
-        """Load the Qwen3-VL-Embedding model (blocking operation)."""
+        """Load the SigLIP model (blocking operation)."""
         # Load from Hugging Face - pre-built wheels, no build issues
-        self.processor = AutoProcessor.from_pretrained(self.model_name, trust_remote_code=True)
-        self.model = AutoModel.from_pretrained(self.model_name, trust_remote_code=True, device_map=self.device)
+        # Load model and image processor separately to avoid tokenizer loading issues
+        self.image_processor = AutoImageProcessor.from_pretrained(self.model_name)
+        self.model = AutoModel.from_pretrained(self.model_name)
+        self.model = self.model.to(self.device)
         self.model.eval()  # Set to evaluation mode
+
+        # Load tokenizer for text encoding (SigLIP uses CLIP tokenizer)
+        self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14")
     
     def _preprocess_image(self, image_content: bytes) -> Image.Image:
-        """Load and prepare image for Qwen3-VL-Embedding."""
+        """Load and prepare image for SigLIP."""
         try:
             # Open and convert image
             image = Image.open(BytesIO(image_content))
@@ -111,31 +118,39 @@ class CLIPService:
     async def _create_text_prompts(self, aesthetic_terms: List[str]) -> List[str]:
         """Create text prompts for zero-shot classification using actual keywords."""
         from services.aesthetic_service import aesthetic_service
-        
+
         prompts = []
         for term in aesthetic_terms:
             # Get keywords for this aesthetic
             keywords = await aesthetic_service.get_keywords_for_aesthetic(term)
-            
+
             if keywords:
                 # Use the first few keywords to create a rich prompt
                 keyword_text = ", ".join(keywords[:5])  # Use first 5 keywords
                 prompt = f"{term.replace('_', ' ')} aesthetic with {keyword_text}"
-                
+
                 # Debug logging for gorpcore
                 if term == "gorpcore":
-                    logger.info(f"🎯 GORPCORE PROMPT: '{prompt}'")
-                    logger.info(f"🎯 GORPCORE KEYWORDS: {keywords}")
+                    logger.info(f"GORPCORE PROMPT: '{prompt}'")
+                    logger.info(f"GORPCORE KEYWORDS: {keywords}")
             else:
                 # Fallback to simple template if no keywords
                 prompt = f"a {term.replace('_', ' ')} style outfit"
-                
+
                 # Debug logging for gorpcore
                 if term == "gorpcore":
-                    logger.warning(f"❌ GORPCORE NO KEYWORDS: '{prompt}'")
-            
+                    logger.warning(f"GORPCORE NO KEYWORDS: '{prompt}'")
+
             prompts.append(prompt)
-        
+
+        return prompts
+
+    def _create_text_prompts_sync(self, aesthetic_terms: List[str]) -> List[str]:
+        """Create text prompts synchronously (simpler version without keywords)."""
+        prompts = []
+        for term in aesthetic_terms:
+            prompt = f"a {term.replace('_', ' ')} style outfit"
+            prompts.append(prompt)
         return prompts
     
     async def classify_aesthetics(self, 
@@ -180,8 +195,9 @@ class CLIPService:
         # Preprocess image
         image = self._preprocess_image(image_content)
 
-        # Generate image embedding using Qwen processor
-        inputs = self.processor(images=[image], return_tensors="pt").to(self.device)
+        # Generate image embedding using image processor
+        inputs = self.image_processor(images=[image], return_tensors="pt")
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
         with torch.no_grad():
             image_features = self.model.get_image_features(**inputs)
             image_features /= image_features.norm(dim=-1, keepdim=True)
@@ -229,9 +245,10 @@ class CLIPService:
     
     def _compute_text_features_on_demand(self, aesthetic_vocabulary: List[str]) -> torch.Tensor:
         """Compute text features on-demand (fallback when cache is not available)."""
-        text_prompts = self._create_text_prompts(aesthetic_vocabulary)
+        text_prompts = self._create_text_prompts_sync(aesthetic_vocabulary)
 
-        inputs = self.processor(text=text_prompts, padding=True, return_tensors="pt").to(self.device)
+        inputs = self.tokenizer(text_prompts, padding=True, return_tensors="pt")
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
         with torch.no_grad():
             text_features = self.model.get_text_features(**inputs)
@@ -278,9 +295,11 @@ class CLIPService:
             image1 = self._preprocess_image(image1_content)
             image2 = self._preprocess_image(image2_content)
 
-            # Generate embeddings using Qwen processor
-            inputs1 = self.processor(images=[image1], return_tensors="pt").to(self.device)
-            inputs2 = self.processor(images=[image2], return_tensors="pt").to(self.device)
+            # Generate embeddings using image processor
+            inputs1 = self.image_processor(images=[image1], return_tensors="pt")
+            inputs1 = {k: v.to(self.device) for k, v in inputs1.items()}
+            inputs2 = self.image_processor(images=[image2], return_tensors="pt")
+            inputs2 = {k: v.to(self.device) for k, v in inputs2.items()}
 
             with torch.no_grad():
                 image1_features = self.model.get_image_features(**inputs1)
@@ -317,7 +336,8 @@ class CLIPService:
         """Synchronous image embedding extraction."""
         image = self._preprocess_image(image_content)
 
-        inputs = self.processor(images=[image], return_tensors="pt").to(self.device)
+        inputs = self.image_processor(images=[image], return_tensors="pt")
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
         with torch.no_grad():
             image_features = self.model.get_image_features(**inputs)
@@ -368,7 +388,8 @@ class CLIPService:
                 # Process image
                 candidate_image = self._preprocess_image(response.content)
 
-                inputs = self.processor(images=[candidate_image], return_tensors="pt").to(self.device)
+                inputs = self.image_processor(images=[candidate_image], return_tensors="pt")
+                inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
                 with torch.no_grad():
                     candidate_features = self.model.get_image_features(**inputs)
