@@ -13,7 +13,10 @@ python-multipart>=0.0.9
 # For Railway: torch will be installed via pip with --index-url flag in build command
 transformers>=4.30.0
 pillow
-git+https://github.com/openai/CLIP.git
+# Qwen3-VL-Embedding: State-of-the-art multimodal embedding model (replaces CLIP)
+# - Pre-built from Hugging Face (no build issues on Railway)
+# - Better performance than CLIP on image-text retrieval
+# - Optimized for aesthetic classification and ranking tasks
 
 # API and HTTP clients
 httpx>=0.25.0

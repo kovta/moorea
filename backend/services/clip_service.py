@@ -1,4 +1,4 @@
-"""CLIP model service for aesthetic classification and image similarity."""
+"""Vision-Language model service for aesthetic classification and image similarity."""
 
 import logging
 import hashlib
@@ -8,8 +8,7 @@ import asyncio
 import numpy as np
 from PIL import Image
 import torch
-import clip
-from transformers import CLIPProcessor, CLIPModel
+from transformers import AutoProcessor, AutoModel
 
 from config import settings
 from models import AestheticScore
@@ -19,89 +18,92 @@ logger = logging.getLogger(__name__)
 
 
 class CLIPService:
-    """Service for CLIP-based aesthetic classification and similarity."""
-    
+    """Service for vision-language model-based aesthetic classification and similarity.
+
+    Uses Qwen3-VL-Embedding (state-of-the-art multimodal embedding model)
+    as replacement for CLIP with better performance on image-text retrieval.
+    """
+
     def __init__(self):
         self.model = None
         self.processor = None
         self.device = None
         self._model_loaded = False
         self._text_embeddings_cache = {}  # Cache for pre-computed text embeddings
-    
+        self.model_name = "Qwen/Qwen3-VL-Embedding-2B"  # Using 2B for balanced performance/size
+
     async def initialize(self):
-        """Initialize CLIP model."""
+        """Initialize Qwen3-VL-Embedding model."""
         try:
-            logger.info(f"Loading CLIP model: {settings.clip_model_name}")
-            
+            logger.info(f"Loading vision-language model: {self.model_name}")
+
             # Determine device
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
             logger.info(f"Using device: {self.device}")
-            
+
             # Load model asynchronously in thread pool to avoid blocking
             await asyncio.get_event_loop().run_in_executor(
                 None, self._load_model
             )
-            
-            logger.info("CLIP model loaded successfully")
+
+            logger.info("Vision-language model loaded successfully")
             self._model_loaded = True
-            
+
             # Pre-compute text embeddings for performance
             await self._precompute_text_embeddings()
-            
+
         except Exception as e:
-            logger.error(f"Failed to load CLIP model: {str(e)}")
+            logger.error(f"Failed to load vision-language model: {str(e)}")
             raise
     
     async def _precompute_text_embeddings(self):
         """Pre-compute and cache text embeddings for all aesthetics."""
         try:
             from services.aesthetic_service import aesthetic_service
-            
+
             # Get aesthetic vocabulary
             vocabulary = await aesthetic_service.get_vocabulary()
             logger.info(f"Pre-computing text embeddings for {len(vocabulary)} aesthetics...")
-            
+
             # Create text prompts using actual keywords
             text_prompts = await self._create_text_prompts(vocabulary)
-            
-            # Tokenize and encode in one batch for efficiency
-            text_tokens = clip.tokenize(text_prompts).to(self.device)
-            
+
+            # Encode text using Qwen processor and model
+            inputs = self.processor(text=text_prompts, padding=True, return_tensors="pt").to(self.device)
+
             with torch.no_grad():
-                text_features = self.model.encode_text(text_tokens)
+                text_features = self.model.get_text_features(**inputs)
                 text_features /= text_features.norm(dim=-1, keepdim=True)
-            
+
             # Cache embeddings by aesthetic name
             for i, aesthetic in enumerate(vocabulary):
                 self._text_embeddings_cache[aesthetic] = text_features[i:i+1]
-            
+
             logger.info(f"✅ Pre-computed {len(vocabulary)} text embeddings for faster classification")
-            
+
         except Exception as e:
             logger.warning(f"Failed to pre-compute text embeddings: {str(e)}")
             # Continue without pre-computed embeddings (fallback to on-demand)
     
     def _load_model(self):
-        """Load the CLIP model (blocking operation)."""
-        # Using OpenAI's CLIP implementation
-        self.model, self.processor = clip.load(settings.clip_model_name, device=self.device)
+        """Load the Qwen3-VL-Embedding model (blocking operation)."""
+        # Load from Hugging Face - pre-built wheels, no build issues
+        self.processor = AutoProcessor.from_pretrained(self.model_name, trust_remote_code=True)
+        self.model = AutoModel.from_pretrained(self.model_name, trust_remote_code=True, device_map=self.device)
         self.model.eval()  # Set to evaluation mode
     
-    def _preprocess_image(self, image_content: bytes) -> torch.Tensor:
-        """Preprocess image for CLIP."""
+    def _preprocess_image(self, image_content: bytes) -> Image.Image:
+        """Load and prepare image for Qwen3-VL-Embedding."""
         try:
             # Open and convert image
             image = Image.open(BytesIO(image_content))
-            
+
             # Convert to RGB if needed
             if image.mode != 'RGB':
                 image = image.convert('RGB')
-            
-            # Preprocess with CLIP processor
-            image_input = self.processor(image).unsqueeze(0).to(self.device)
-            
-            return image_input
-            
+
+            return image
+
         except Exception as e:
             logger.error(f"Error preprocessing image: {str(e)}")
             raise
@@ -174,26 +176,27 @@ class CLIPService:
             raise
     
     def _classify_sync(self, image_content: bytes, aesthetic_vocabulary: List[str]) -> List[AestheticScore]:
-        """Synchronous CLIP classification using cached text embeddings."""
+        """Synchronous vision-language model classification using cached text embeddings."""
         # Preprocess image
-        image_input = self._preprocess_image(image_content)
-        
-        # Generate image embedding
+        image = self._preprocess_image(image_content)
+
+        # Generate image embedding using Qwen processor
+        inputs = self.processor(images=[image], return_tensors="pt").to(self.device)
         with torch.no_grad():
-            image_features = self.model.encode_image(image_input)
+            image_features = self.model.get_image_features(**inputs)
             image_features /= image_features.norm(dim=-1, keepdim=True)
-        
+
         # Use cached text embeddings if available, otherwise compute on-demand
         if self._text_embeddings_cache:
             # Fast path: use pre-computed embeddings
             text_features_list = []
             valid_aesthetics = []
-            
+
             for aesthetic in aesthetic_vocabulary:
                 if aesthetic in self._text_embeddings_cache:
                     text_features_list.append(self._text_embeddings_cache[aesthetic])
                     valid_aesthetics.append(aesthetic)
-            
+
             if text_features_list:
                 # Stack cached embeddings
                 text_features = torch.cat(text_features_list, dim=0)
@@ -204,11 +207,11 @@ class CLIPService:
         else:
             # Fallback: compute text embeddings on-demand
             text_features = self._compute_text_features_on_demand(aesthetic_vocabulary)
-        
+
         # Calculate similarities
         with torch.no_grad():
             similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)
-            
+
         # Convert to AestheticScore objects
         scores = []
         for i, (term, score) in enumerate(zip(aesthetic_vocabulary, similarity[0])):
@@ -217,22 +220,23 @@ class CLIPService:
                 score=float(score),
                 description=None  # Can be filled by aesthetic_service later
             ))
-        
+
         # Sort by score descending
         scores.sort(key=lambda x: x.score, reverse=True)
-        
+
         logger.info(f"⚡ Fast classification - Top 3: {[(s.name, f'{s.score:.3f}') for s in scores[:3]]}")
         return scores
     
     def _compute_text_features_on_demand(self, aesthetic_vocabulary: List[str]) -> torch.Tensor:
         """Compute text features on-demand (fallback when cache is not available)."""
         text_prompts = self._create_text_prompts(aesthetic_vocabulary)
-        text_tokens = clip.tokenize(text_prompts).to(self.device)
-        
+
+        inputs = self.processor(text=text_prompts, padding=True, return_tensors="pt").to(self.device)
+
         with torch.no_grad():
-            text_features = self.model.encode_text(text_tokens)
+            text_features = self.model.get_text_features(**inputs)
             text_features /= text_features.norm(dim=-1, keepdim=True)
-        
+
         return text_features
     
     async def calculate_image_similarity(self, 
@@ -264,30 +268,33 @@ class CLIPService:
         """Synchronous image similarity calculation."""
         try:
             import requests
-            
+
             # Get second image
             response = requests.get(image2_url, timeout=10)
             response.raise_for_status()
             image2_content = response.content
-            
+
             # Process both images
-            image1_input = self._preprocess_image(image1_content)
-            image2_input = self._preprocess_image(image2_content)
-            
-            # Generate embeddings
+            image1 = self._preprocess_image(image1_content)
+            image2 = self._preprocess_image(image2_content)
+
+            # Generate embeddings using Qwen processor
+            inputs1 = self.processor(images=[image1], return_tensors="pt").to(self.device)
+            inputs2 = self.processor(images=[image2], return_tensors="pt").to(self.device)
+
             with torch.no_grad():
-                image1_features = self.model.encode_image(image1_input)
-                image2_features = self.model.encode_image(image2_input)
-                
+                image1_features = self.model.get_image_features(**inputs1)
+                image2_features = self.model.get_image_features(**inputs2)
+
                 # Normalize
                 image1_features /= image1_features.norm(dim=-1, keepdim=True)
                 image2_features /= image2_features.norm(dim=-1, keepdim=True)
-                
+
                 # Calculate cosine similarity
                 similarity = torch.cosine_similarity(image1_features, image2_features)
-                
+
             return float(similarity.item())
-            
+
         except Exception as e:
             logger.error(f"Error in similarity calculation: {str(e)}")
             return 0.0
@@ -308,12 +315,14 @@ class CLIPService:
     
     def _embedding_sync(self, image_content: bytes) -> np.ndarray:
         """Synchronous image embedding extraction."""
-        image_input = self._preprocess_image(image_content)
-        
+        image = self._preprocess_image(image_content)
+
+        inputs = self.processor(images=[image], return_tensors="pt").to(self.device)
+
         with torch.no_grad():
-            image_features = self.model.encode_image(image_input)
+            image_features = self.model.get_image_features(**inputs)
             image_features /= image_features.norm(dim=-1, keepdim=True)
-            
+
         return image_features.cpu().numpy()[0]
     
     async def batch_similarity(self, 
@@ -341,36 +350,38 @@ class CLIPService:
             logger.error(f"Error in batch similarity: {str(e)}")
             return [0.0] * len(candidate_urls)
     
-    def _batch_similarity_sync(self, 
+    def _batch_similarity_sync(self,
                               original_embedding: np.ndarray,
                               candidate_urls: List[str]) -> List[float]:
         """Synchronous batch similarity calculation."""
         import requests
-        
+
         similarities = []
         original_tensor = torch.from_numpy(original_embedding).unsqueeze(0).to(self.device)
-        
+
         for url in candidate_urls:
             try:
                 # Fetch image with timeout
                 response = requests.get(url, timeout=5)
                 response.raise_for_status()
-                
+
                 # Process image
-                candidate_input = self._preprocess_image(response.content)
-                
+                candidate_image = self._preprocess_image(response.content)
+
+                inputs = self.processor(images=[candidate_image], return_tensors="pt").to(self.device)
+
                 with torch.no_grad():
-                    candidate_features = self.model.encode_image(candidate_input)
+                    candidate_features = self.model.get_image_features(**inputs)
                     candidate_features /= candidate_features.norm(dim=-1, keepdim=True)
-                    
+
                     # Calculate similarity
                     similarity = torch.cosine_similarity(original_tensor, candidate_features)
                     similarities.append(float(similarity.item()))
-                    
+
             except Exception as e:
                 logger.warning(f"Failed to process candidate {url}: {str(e)}")
                 similarities.append(0.0)
-        
+
         return similarities
 
 
