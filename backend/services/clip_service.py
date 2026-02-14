@@ -8,7 +8,7 @@ import asyncio
 import numpy as np
 from PIL import Image
 import torch
-from transformers import AutoModel, AutoImageProcessor, CLIPTokenizer
+from transformers import AutoModel, AutoImageProcessor, AutoTokenizer
 
 from config import settings
 from models import AestheticScore
@@ -74,14 +74,16 @@ class CLIPService:
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
             with torch.no_grad():
-                text_features = self.model.get_text_features(**inputs)
+                text_output = self.model.get_text_features(**inputs)
+                # SigLIP returns BaseModelOutputWithPooling, extract pooler_output
+                text_features = text_output.pooler_output if hasattr(text_output, 'pooler_output') else text_output
                 text_features /= text_features.norm(dim=-1, keepdim=True)
 
             # Cache embeddings by aesthetic name
             for i, aesthetic in enumerate(vocabulary):
                 self._text_embeddings_cache[aesthetic] = text_features[i:i+1]
 
-            logger.info(f"✅ Pre-computed {len(vocabulary)} text embeddings for faster classification")
+            logger.info(f"Pre-computed {len(vocabulary)} text embeddings for faster classification")
 
         except Exception as e:
             logger.warning(f"Failed to pre-compute text embeddings: {str(e)}")
@@ -96,8 +98,8 @@ class CLIPService:
         self.model = self.model.to(self.device)
         self.model.eval()  # Set to evaluation mode
 
-        # Load tokenizer for text encoding (SigLIP uses CLIP tokenizer)
-        self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14")
+        # Load tokenizer for text encoding (SigLIP model's native tokenizer)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
     
     def _preprocess_image(self, image_content: bytes) -> Image.Image:
         """Load and prepare image for SigLIP."""
@@ -199,7 +201,9 @@ class CLIPService:
         inputs = self.image_processor(images=[image], return_tensors="pt")
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
         with torch.no_grad():
-            image_features = self.model.get_image_features(**inputs)
+            image_output = self.model.get_image_features(**inputs)
+            # SigLIP returns BaseModelOutputWithPooling, extract pooler_output
+            image_features = image_output.pooler_output if hasattr(image_output, 'pooler_output') else image_output
             image_features /= image_features.norm(dim=-1, keepdim=True)
 
         # Use cached text embeddings if available, otherwise compute on-demand
@@ -251,7 +255,9 @@ class CLIPService:
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
         with torch.no_grad():
-            text_features = self.model.get_text_features(**inputs)
+            text_output = self.model.get_text_features(**inputs)
+            # SigLIP returns BaseModelOutputWithPooling, extract pooler_output
+            text_features = text_output.pooler_output if hasattr(text_output, 'pooler_output') else text_output
             text_features /= text_features.norm(dim=-1, keepdim=True)
 
         return text_features
@@ -302,8 +308,12 @@ class CLIPService:
             inputs2 = {k: v.to(self.device) for k, v in inputs2.items()}
 
             with torch.no_grad():
-                image1_features = self.model.get_image_features(**inputs1)
-                image2_features = self.model.get_image_features(**inputs2)
+                output1 = self.model.get_image_features(**inputs1)
+                output2 = self.model.get_image_features(**inputs2)
+
+                # SigLIP returns BaseModelOutputWithPooling, extract pooler_output
+                image1_features = output1.pooler_output if hasattr(output1, 'pooler_output') else output1
+                image2_features = output2.pooler_output if hasattr(output2, 'pooler_output') else output2
 
                 # Normalize
                 image1_features /= image1_features.norm(dim=-1, keepdim=True)
@@ -340,7 +350,9 @@ class CLIPService:
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
         with torch.no_grad():
-            image_features = self.model.get_image_features(**inputs)
+            output = self.model.get_image_features(**inputs)
+            # SigLIP returns BaseModelOutputWithPooling, extract pooler_output
+            image_features = output.pooler_output if hasattr(output, 'pooler_output') else output
             image_features /= image_features.norm(dim=-1, keepdim=True)
 
         return image_features.cpu().numpy()[0]
@@ -392,7 +404,9 @@ class CLIPService:
                 inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
                 with torch.no_grad():
-                    candidate_features = self.model.get_image_features(**inputs)
+                    output = self.model.get_image_features(**inputs)
+                    # SigLIP returns BaseModelOutputWithPooling, extract pooler_output
+                    candidate_features = output.pooler_output if hasattr(output, 'pooler_output') else output
                     candidate_features /= candidate_features.norm(dim=-1, keepdim=True)
 
                     # Calculate similarity
