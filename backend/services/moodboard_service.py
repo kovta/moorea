@@ -522,222 +522,23 @@ class MoodboardService:
             logger.error(f"Local folder candidates error: {e}")
             return []
     
-    async def _rerank_candidates(self, original_image: bytes, 
+    async def _rerank_candidates(self, original_image: bytes,
                                 candidates: List[ImageCandidate]) -> List[ImageCandidate]:
-        """Re-rank candidates using CLIP similarity."""
-        try:
-            if not candidates:
-                logger.warning("⚠️ No candidates to rerank!")
-                return []
-            
-            logger.info(f"🔄 Re-ranking {len(candidates)} candidates using CLIP similarity")
-            
-            # Lazy import CLIP service to avoid hard dependency at import time
-            try:
-                from services.clip_service import clip_service
-            except Exception as e:
-                logger.warning(f"CLIP service unavailable, returning top candidates without scoring: {e}")
-                return candidates[:settings.final_moodboard_size]
-
-            # Get original image embedding
-            original_embedding = await clip_service.get_image_embedding(original_image)
-            logger.info(f"✅ Got original image embedding")
-            
-            # Calculate similarities for all candidates
-            candidate_urls = [c.url for c in candidates]
-            logger.info(f"📊 Calculating similarity for {len(candidate_urls)} candidate URLs")
-            similarities = await clip_service.batch_similarity(original_embedding, candidate_urls)
-            logger.info(f"✅ Got {len(similarities)} similarity scores")
-            
-            # Add similarity scores and sort by score
-            scored_candidates = []
-            for candidate, similarity in zip(candidates, similarities):
-                candidate.similarity_score = similarity
-                scored_candidates.append(candidate)
-            
-            # Log similarity score distribution
-            if scored_candidates:
-                scores = [c.similarity_score or 0 for c in scored_candidates]
-                logger.info(f"📊 Similarity scores - Min: {min(scores):.3f}, Max: {max(scores):.3f}, Avg: {sum(scores)/len(scores):.3f}")
-                logger.info(f"   Top 5 scores: {sorted(scores, reverse=True)[:5]}")
-            
-            # Sort by similarity score (highest first)
-            scored_candidates.sort(key=lambda x: x.similarity_score or 0, reverse=True)
-            
-            # Filter by minimum similarity threshold (lowered to 15% to be more inclusive)
-            MIN_SIMILARITY_THRESHOLD = 0.15
-            filtered_candidates = [
-                candidate for candidate in scored_candidates 
-                if (candidate.similarity_score or 0) >= MIN_SIMILARITY_THRESHOLD
-            ]
-            
-            logger.info(f"📊 Filtered {len(scored_candidates)} candidates to {len(filtered_candidates)} above {MIN_SIMILARITY_THRESHOLD} similarity")
-            
-            # Return filtered candidates (up to final moodboard size)
-            if len(filtered_candidates) >= 3:  # Need at least 3 good matches
-                final_count = min(len(filtered_candidates), settings.final_moodboard_size)
-                logger.info(f"✅ Returning {final_count} filtered candidates")
-                return filtered_candidates[:final_count]
-            else:
-                # Fallback: if too few high-quality matches, lower threshold to 10%
-                logger.warning(f"⚠️ Only {len(filtered_candidates)} high-quality matches, using 10% threshold")
-                fallback_candidates = [
-                    candidate for candidate in scored_candidates 
-                    if (candidate.similarity_score or 0) >= 0.10
-                ]
-                if len(fallback_candidates) >= 3:
-                    final_count = min(len(fallback_candidates), settings.final_moodboard_size)
-                    logger.info(f"✅ Returning {final_count} fallback candidates (10% threshold)")
-                    return fallback_candidates[:final_count]
-                else:
-                    # Final fallback: return top candidates regardless of similarity
-                    logger.warning(f"⚠️ Very few matches even at 10%, returning top {settings.final_moodboard_size} candidates")
-                    final_count = min(len(scored_candidates), settings.final_moodboard_size)
-                    return scored_candidates[:final_count]
-            
-        except Exception as e:
-            logger.error(f"❌ Error in candidate re-ranking: {str(e)}")
-            logger.error(f"   Exception type: {type(e).__name__}")
-            import traceback
-            logger.error(f"   Traceback: {traceback.format_exc()}")
-            # Fallback: return first N candidates without scoring
-            logger.warning(f"⚠️ Returning {min(len(candidates), settings.final_moodboard_size)} candidates without similarity scoring")
-            return candidates[:settings.final_moodboard_size]
+        """Return top candidates in API relevance order (no CLIP re-ranking for speed)."""
+        if not candidates:
+            logger.warning("No candidates to select from!")
+            return []
+        final_count = min(len(candidates), settings.final_moodboard_size)
+        logger.info(f"Selecting top {final_count} candidates from {len(candidates)} (API relevance order)")
+        return candidates[:final_count]
 
     async def _apply_classification_filters(self, image_content: bytes, all_scores: List[AestheticScore]) -> List[AestheticScore]:
-        """Apply post-processing filters to fix common misclassifications - optimized for speed."""
-        try:
-            # Lazy import clip_service; if unavailable, skip filters
-            try:
-                from services.clip_service import clip_service
-            except Exception as e:
-                logger.warning(f"CLIP service unavailable during post-filters, skipping filters: {e}")
-                return all_scores
-            # SPEED OPTIMIZATION: Only apply filters if problematic aesthetics are in top 5
-            top_aesthetics = [score.name for score in all_scores[:5]]
-            
-            if "mod" in top_aesthetics or "gorpcore" in top_aesthetics:
-                # Filter 1: Fix boot misclassifications (only if needed)
-                boot_keywords = ["boots", "knee high boots", "riding boots"]  # Removed cowboy boots
-                boot_scores = await clip_service.classify_aesthetics(image_content, boot_keywords)
-                max_boot_score = max([score.score for score in boot_scores]) if boot_scores else 0
-                
-                # Check if it's specifically cowboy boots by looking for western elements
-                western_keywords = ["cowboy boots", "western wear", "ranch style", "country fashion", "rural lifestyle"]
-                western_scores = await clip_service.classify_aesthetics(image_content, western_keywords)
-                max_western_score = max([score.score for score in western_scores]) if western_scores else 0
-                is_cowboy_boots = max_western_score > 0.25  # 25% confidence threshold for western elements
-                
-                if max_boot_score > 0.3:  # 30% confidence threshold for boots
-                    logger.info(f"🔧 BOOT DETECTED: {max_boot_score:.3f} confidence")
-                    
-                    if is_cowboy_boots:
-                        # Special handling for cowboy boots - boost farmcore
-                        farmcore_score = next((score for score in all_scores if score.name == "farmcore"), None)
-                        if farmcore_score:
-                            farmcore_score.score *= 3.0  # Increased boost for farmcore
-                            logger.info(f"🤠 COWBOY BOOT FILTER: Boosted farmcore score to {farmcore_score.score:.3f} (western score: {max_western_score:.3f})")
-                    else:
-                        # Regular boot handling for non-cowboy boots
-                        # Fix mod misclassification
-                        mod_score = next((score for score in all_scores if score.name == "mod"), None)
-                        if mod_score and mod_score.score > 0.1:
-                            mod_score.score *= 0.2  # Reduce mod by 80%
-                            logger.info(f"🔧 BOOT FILTER: Reduced mod score to {mod_score.score:.3f}")
-                        
-                        # Fix gorpcore misclassification
-                        gorpcore_score = next((score for score in all_scores if score.name == "gorpcore"), None)
-                        if gorpcore_score and gorpcore_score.score > 0.1:
-                            gorpcore_score.score *= 0.1  # Reduce gorpcore by 90%
-                            logger.info(f"🔧 BOOT FILTER: Reduced gorpcore score to {gorpcore_score.score:.3f}")
-                        
-                        # Boost more appropriate aesthetics for boots
-                        vintage_score = next((score for score in all_scores if score.name == "vintage"), None)
-                        preppy_score = next((score for score in all_scores if score.name == "preppy"), None)
-                        old_money_score = next((score for score in all_scores if score.name == "old_money"), None)
-                        
-                        if vintage_score:
-                            vintage_score.score *= 2.0  # Boost vintage for boots
-                            logger.info(f"🔧 BOOT FILTER: Boosted vintage score to {vintage_score.score:.3f}")
-                        if preppy_score:
-                            preppy_score.score *= 1.8  # Boost preppy for boots
-                            logger.info(f"🔧 BOOT FILTER: Boosted preppy score to {preppy_score.score:.3f}")
-                        if old_money_score:
-                            old_money_score.score *= 1.6  # Boost old money for boots
-                            logger.info(f"🔧 BOOT FILTER: Boosted old_money score to {old_money_score.score:.3f}")
-            
-            # Filter 2: Fix cozy sweater misclassification (quiet_luxury vs hygge/cozycore)
-            if "quiet_luxury" in top_aesthetics:
-                cozy_sweater_keywords = ["patterned sweater", "knit sweater", "cozy sweater", "warm knitwear", "comfortable sweater", "soft textures"]
-                cozy_sweater_scores = await clip_service.classify_aesthetics(image_content, cozy_sweater_keywords)
-                max_cozy_score = max([score.score for score in cozy_sweater_scores]) if cozy_sweater_scores else 0
-                
-                if max_cozy_score > 0.25:  # 25% confidence threshold for cozy sweater elements
-                    logger.info(f"🧶 COZY SWEATER DETECTED: {max_cozy_score:.3f} confidence")
-                    
-                    # Reduce quiet_luxury score for cozy/patterned items
-                    quiet_luxury_score = next((score for score in all_scores if score.name == "quiet_luxury"), None)
-                    if quiet_luxury_score and quiet_luxury_score.score > 0.1:
-                        quiet_luxury_score.score *= 0.3  # Reduce quiet_luxury by 70%
-                        logger.info(f"🔧 COZY SWEATER FILTER: Reduced quiet_luxury score to {quiet_luxury_score.score:.3f}")
-                    
-                    # Boost hygge and cozycore for cozy sweaters
-                    hygge_score = next((score for score in all_scores if score.name == "hygge"), None)
-                    cozycore_score = next((score for score in all_scores if score.name == "cozycore"), None)
-                    
-                    if hygge_score:
-                        hygge_score.score *= 2.5  # Boost hygge for cozy sweaters
-                        logger.info(f"🔧 COZY SWEATER FILTER: Boosted hygge score to {hygge_score.score:.3f}")
-                    if cozycore_score:
-                        cozycore_score.score *= 2.5  # Boost cozycore for cozy sweaters
-                        logger.info(f"🔧 COZY SWEATER FILTER: Boosted cozycore score to {cozycore_score.score:.3f}")
-            
-            # Re-sort scores after filtering
-            all_scores.sort(key=lambda x: x.score, reverse=True)
-            
-            return all_scores
-            
-        except Exception as e:
-            logger.error(f"Error in classification filters: {str(e)}")
-            return all_scores
+        """No-op: extra per-category CLIP calls were removed for speed."""
+        return all_scores
 
     async def _validate_gorpcore_context(self, image_content: bytes, aesthetic_name: str) -> bool:
-        """Validate if image actually contains outdoor/hiking elements before applying gorpcore boost."""
-        try:
-            # Define outdoor/hiking elements that should trigger gorpcore
-            outdoor_keywords = [
-                "hiking gear", "outdoor equipment", "technical clothing", "waterproof jacket", 
-                "cargo pants", "utility vest", "hiking backpack", "outdoor adventure", 
-                "mountain gear", "trail hiking", "outdoor activity", "hiking trail"
-            ]
-            
-            # Define non-outdoor elements that should NOT trigger gorpcore
-            non_outdoor_keywords = [
-                "formal boots", "dress boots", "fashion boots", "knee high boots", 
-                "riding boots", "leather boots", "casual boots", "street boots",
-                "office wear", "business attire", "formal clothing", "dress shoes"
-            ]
-            
-            # Check for outdoor elements
-            outdoor_scores = await clip_service.classify_aesthetics(image_content, outdoor_keywords)
-            max_outdoor_score = max([score.score for score in outdoor_scores]) if outdoor_scores else 0
-            
-            # Check for non-outdoor elements
-            non_outdoor_scores = await clip_service.classify_aesthetics(image_content, non_outdoor_keywords)
-            max_non_outdoor_score = max([score.score for score in non_outdoor_scores]) if non_outdoor_scores else 0
-            
-            # Only apply gorpcore boost if outdoor elements are more confident than non-outdoor
-            if max_outdoor_score > max_non_outdoor_score and max_outdoor_score > 0.2:
-                logger.info(f"✅ GORPCORE CONTEXT VALIDATED: outdoor={max_outdoor_score:.3f} > non-outdoor={max_non_outdoor_score:.3f}")
-                return True
-            else:
-                logger.info(f"🚫 GORPCORE CONTEXT REJECTED: outdoor={max_outdoor_score:.3f} <= non-outdoor={max_non_outdoor_score:.3f}")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error in gorpcore context validation: {str(e)}")
-            # Default to rejecting gorpcore boost if validation fails
-            return False
+        """Allow gorpcore boost without extra CLIP calls (removed for speed)."""
+        return True
 
 
 # Global service instance
