@@ -8,7 +8,7 @@ import asyncio
 import numpy as np
 from PIL import Image
 import torch
-from transformers import AutoModel, AutoImageProcessor, AutoTokenizer
+from transformers import AutoModel, AutoImageProcessor, SiglipTokenizer
 
 from config import settings
 from models import AestheticScore
@@ -66,11 +66,11 @@ class CLIPService:
             vocabulary = await aesthetic_service.get_vocabulary()
             logger.info(f"Pre-computing text embeddings for {len(vocabulary)} aesthetics...")
 
-            # Create text prompts using actual keywords
-            text_prompts = await self._create_text_prompts(vocabulary)
+            # Create text prompts - use simple format optimized for SigLIP
+            text_prompts = [f"a {term.replace('_', ' ')} style fashion photo" for term in vocabulary]
 
-            # Encode text using tokenizer and model
-            inputs = self.tokenizer(text_prompts, padding=True, return_tensors="pt")
+            # Encode text using tokenizer and model (batch in chunks to avoid memory issues)
+            inputs = self.tokenizer(text_prompts, padding="max_length", max_length=64, truncation=True, return_tensors="pt")
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
             with torch.no_grad():
@@ -98,8 +98,8 @@ class CLIPService:
         self.model = self.model.to(self.device)
         self.model.eval()  # Set to evaluation mode
 
-        # Load tokenizer for text encoding (SigLIP model's native tokenizer)
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        # Load tokenizer for text encoding (SigLIP native tokenizer)
+        self.tokenizer = SiglipTokenizer.from_pretrained(self.model_name)
     
     def _preprocess_image(self, image_content: bytes) -> Image.Image:
         """Load and prepare image for SigLIP."""
@@ -228,13 +228,13 @@ class CLIPService:
             # Fallback: compute text embeddings on-demand
             text_features = self._compute_text_features_on_demand(aesthetic_vocabulary)
 
-        # Calculate similarities
+        # Calculate similarities - use raw cosine similarity (SigLIP uses sigmoid, not softmax)
         with torch.no_grad():
-            similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)
+            similarity = (image_features @ text_features.T).squeeze(0)
 
         # Convert to AestheticScore objects
         scores = []
-        for i, (term, score) in enumerate(zip(aesthetic_vocabulary, similarity[0])):
+        for i, (term, score) in enumerate(zip(aesthetic_vocabulary, similarity)):
             scores.append(AestheticScore(
                 name=term,
                 score=float(score),
@@ -244,7 +244,7 @@ class CLIPService:
         # Sort by score descending
         scores.sort(key=lambda x: x.score, reverse=True)
 
-        logger.info(f"⚡ Fast classification - Top 3: {[(s.name, f'{s.score:.3f}') for s in scores[:3]]}")
+        logger.info(f"Classification top 3: {[(s.name, f'{s.score:.3f}') for s in scores[:3]]}")
         return scores
     
     def _compute_text_features_on_demand(self, aesthetic_vocabulary: List[str]) -> torch.Tensor:
