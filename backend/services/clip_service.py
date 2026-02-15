@@ -169,18 +169,22 @@ class CLIPService:
             List of aesthetic scores sorted by confidence
         """
         if not self._model_loaded:
+            print("[CLIP] ERROR: Model not loaded!", flush=True)
             raise RuntimeError("CLIP model not initialized")
-        
+
         # Check cache first
         cached_result = await cache_service.get_classification_cache(image_content)
         if cached_result:
+            print(f"[CLIP] Returning CACHED result (top: {cached_result[0]['name'] if cached_result else 'none'})", flush=True)
             return [AestheticScore(**score) for score in cached_result]
-        
+
+        print(f"[CLIP] No cache hit, running fresh classification...", flush=True)
         try:
             # Run classification in thread pool to avoid blocking
             scores = await asyncio.get_event_loop().run_in_executor(
                 None, self._classify_sync, image_content, aesthetic_vocabulary
             )
+            print(f"[CLIP] Fresh classification done, top: {scores[0].name if scores else 'none'}", flush=True)
             
             # Cache the result
             score_dicts = [score.dict() for score in scores]
@@ -232,9 +236,20 @@ class CLIPService:
         with torch.no_grad():
             similarity = (image_features @ text_features.T).squeeze(0)
 
+        # Normalize scores from [-1, 1] to [0, 1] using min-max normalization
+        # SigLIP cosine similarity can return negative values, but AestheticScore requires [0, 1]
+        sim_min = similarity.min()
+        sim_max = similarity.max()
+        if sim_max > sim_min:
+            similarity_normalized = (similarity - sim_min) / (sim_max - sim_min)
+        else:
+            similarity_normalized = torch.zeros_like(similarity)
+
+        print(f"[CLIP] Raw similarity range: [{float(sim_min):.3f}, {float(sim_max):.3f}]", flush=True)
+
         # Convert to AestheticScore objects
         scores = []
-        for i, (term, score) in enumerate(zip(aesthetic_vocabulary, similarity)):
+        for i, (term, score) in enumerate(zip(aesthetic_vocabulary, similarity_normalized)):
             scores.append(AestheticScore(
                 name=term,
                 score=float(score),

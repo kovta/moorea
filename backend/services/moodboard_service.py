@@ -33,17 +33,30 @@ class MoodboardService:
     async def queue_generation(self, job_id: UUID, image_content: bytes, pinterest_consent: bool = False) -> None:
         """Queue moodboard generation job."""
         # For now, process immediately (add proper queue later)
-        asyncio.create_task(self._process_moodboard(job_id, image_content, pinterest_consent))
+        task = asyncio.create_task(self._process_moodboard(job_id, image_content, pinterest_consent))
+        # Ensure exceptions are logged instead of silently swallowed
+        task.add_done_callback(self._task_done_callback)
+
+    def _task_done_callback(self, task: asyncio.Task) -> None:
+        """Log any unhandled exceptions from background tasks."""
+        try:
+            exc = task.exception()
+            if exc:
+                logger.error(f"Background moodboard task failed: {type(exc).__name__}: {exc}")
+        except asyncio.CancelledError:
+            pass
     
     async def _process_moodboard(self, job_id: UUID, image_content: bytes, pinterest_consent: bool = False) -> None:
         """Process moodboard generation pipeline."""
+        print(f"[PIPELINE] Starting moodboard pipeline for job {job_id}", flush=True)
         try:
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=0)
-            
-            # Step 1: CLIP Classification (placeholder)
+
+            # Step 1: Classification
+            print(f"[PIPELINE] Step 1: Classifying aesthetics...", flush=True)
             logger.info(f"Starting aesthetic classification for job {job_id}")
-            await asyncio.sleep(1)  # Simulate processing
             top_aesthetics = await self._classify_aesthetics(image_content)
+            print(f"[PIPELINE] Classification done: {[a.name for a in top_aesthetics]}", flush=True)
             await job_service.update_job_status(job_id, JobStatus.PROCESSING, progress=25)
             
             # Step 2: Keyword expansion with intelligent filtering
@@ -92,12 +105,13 @@ class MoodboardService:
     
     async def _classify_aesthetics(self, image_content: bytes) -> List[AestheticScore]:
         """Classify image aesthetics using CLIP with confidence threshold."""
+        print(f"[CLASSIFY] Starting classification, image size: {len(image_content)} bytes", flush=True)
         try:
             # Lazy import aesthetic_service to avoid hard dependency at module load
             try:
                 from services.aesthetic_service import aesthetic_service
             except Exception as e:
-                logger.warning(f"Aesthetic service unavailable, using fallback: {e}")
+                print(f"[CLASSIFY] FALLBACK: aesthetic_service unavailable: {e}", flush=True)
                 return [
                     AestheticScore(
                         name="minimalist",
@@ -108,12 +122,13 @@ class MoodboardService:
 
             # Get aesthetic vocabulary
             vocabulary = await aesthetic_service.get_vocabulary()
-            
+            print(f"[CLASSIFY] Got {len(vocabulary)} aesthetics in vocabulary", flush=True)
+
             # Lazy import CLIP service (heavy ML deps)
             try:
                 from services.clip_service import clip_service
             except Exception as e:
-                logger.warning(f"CLIP service unavailable, using fallback: {e}")
+                print(f"[CLASSIFY] FALLBACK: clip_service unavailable: {e}", flush=True)
                 return [
                     AestheticScore(
                         name="minimalist",
@@ -122,8 +137,11 @@ class MoodboardService:
                     )
                 ]
 
+            print(f"[CLASSIFY] clip_service loaded, model_loaded={clip_service._model_loaded}", flush=True)
+
             # Use CLIP for zero-shot classification
             all_scores = await clip_service.classify_aesthetics(image_content, vocabulary)
+            print(f"[CLASSIFY] Got {len(all_scores)} scores, top 3: {[(s.name, f'{s.score:.3f}') for s in all_scores[:3]]}", flush=True)
             
             # Add descriptions from aesthetic service
             for score in all_scores:

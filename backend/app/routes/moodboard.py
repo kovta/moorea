@@ -3,6 +3,7 @@
 import hashlib
 import io
 import logging
+import sys
 from typing import Optional
 from uuid import UUID, uuid4
 
@@ -52,24 +53,26 @@ async def generate_moodboard(
     pinterest_consent: bool = Form(False)
 ):
     """Generate moodboard from uploaded clothing image."""
+    print(f"[MOODBOARD] POST /moodboard/generate received - file: {file.filename}, type: {file.content_type}", flush=True)
     try:
         # Validate file
         _validate_image_file(file)
-        
+
         # Read file content
         file_content = await file.read()
         file_hash = _calculate_file_hash(file_content)
+        print(f"[MOODBOARD] File read OK - {len(file_content)} bytes, hash: {file_hash[:12]}", flush=True)
         
-        # Check if we already processed this image
+        # Check if we already have an in-progress job for this image (avoid duplicate processing)
         existing_job = await job_service.get_job_by_image_hash(file_hash)
-        if existing_job:
-            logger.info(f"Found existing job for image hash: {file_hash}")
+        if existing_job and existing_job.status == JobStatus.PROCESSING:
+            logger.info(f"Found in-progress job for image hash: {file_hash}")
             return MoodboardResponse(
                 job_id=existing_job.id,
                 status=existing_job.status,
-                message="Using existing processing result for this image"
+                message="Image is already being processed"
             )
-        
+
         # Validate image can be opened
         try:
             image = Image.open(io.BytesIO(file_content))

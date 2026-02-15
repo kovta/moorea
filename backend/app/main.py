@@ -1,8 +1,17 @@
 """Main FastAPI application."""
 
 import logging
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
+
+# Fix Windows console encoding for emoji in log messages
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(errors="replace")
+        sys.stderr.reconfigure(errors="replace")
+    except Exception:
+        pass
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -57,8 +66,12 @@ async def lifespan(app: FastAPI):
     try:
         await cache_service.initialize()
         logger.info("Cache service initialized")
+        # Clear stale classification cache on startup to ensure fresh results after model changes
+        cleared = await cache_service.clear_cache("classification:*")
+        if cleared:
+            logger.info(f"Cleared {cleared} stale classification cache entries")
     except Exception as e:
-        logger.warning(f"⚠️  Cache service initialization failed: {e}")
+        logger.warning(f"Cache service initialization failed: {e}")
     
     if ML_AVAILABLE:
         try:
@@ -162,6 +175,24 @@ async def root():
         timestamp=datetime.now(),
         version=settings.app_version
     )
+
+
+@app.get("/debug/ml-status")
+async def ml_status():
+    """Debug: check ML model loading state."""
+    result = {"ml_available": ML_AVAILABLE}
+    if ML_AVAILABLE and clip_service:
+        result["clip_model_loaded"] = clip_service._model_loaded
+        result["clip_model_name"] = clip_service.model_name
+        result["clip_device"] = str(clip_service.device)
+        result["text_cache_size"] = len(clip_service._text_embeddings_cache)
+    if ML_AVAILABLE and aesthetic_service:
+        try:
+            vocab = await aesthetic_service.get_vocabulary()
+            result["aesthetic_vocab_size"] = len(vocab)
+        except Exception as e:
+            result["aesthetic_error"] = str(e)
+    return result
 
 
 @app.get("/health", response_model=HealthResponse)
