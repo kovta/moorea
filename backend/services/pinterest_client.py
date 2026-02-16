@@ -126,10 +126,12 @@ class PinterestAPIClient:
         return images
 
     async def is_authenticated(self) -> bool:
-        """Check if Pinterest API is authenticated via OAuth or API key."""
-        has_oauth_token = self.oauth_service.get_access_token() is not None
-        has_api_key = self.oauth_service.client_key is not None
-        return has_oauth_token or has_api_key
+        """Check if Pinterest API is authenticated via OAuth token.
+
+        NOTE: client_key (client secret) cannot be used as an API key.
+        Pinterest v5 requires a proper OAuth user access token.
+        """
+        return self.oauth_service.get_access_token() is not None
 
 
 # Global Pinterest API client instance
