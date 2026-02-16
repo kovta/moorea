@@ -29,7 +29,7 @@ class PinterestAPIClient:
         if bookmark:
             params["bookmark"] = bookmark
 
-        endpoint = f"/v5/pins/search?{urlencode(params)}"
+        endpoint = f"/v5/search/pins?{urlencode(params)}"
 
         return await self.oauth_service.make_authenticated_request("GET", endpoint)
 
