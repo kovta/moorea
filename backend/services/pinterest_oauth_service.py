@@ -63,6 +63,14 @@ class PinterestOAuthService:
             logger.warning(f"Redis unavailable ({e}), using in-memory cache for development")
             self.redis_client = InMemoryCache()
 
+        # Pre-load tokens from environment variables (survives restarts)
+        if settings.pinterest_access_token:
+            self.redis_client.set("pinterest_access_token", settings.pinterest_access_token)
+            logger.info("Loaded Pinterest access token from environment")
+        if settings.pinterest_refresh_token:
+            self.redis_client.set("pinterest_refresh_token", settings.pinterest_refresh_token)
+            logger.info("Loaded Pinterest refresh token from environment - will auto-refresh access token on first use")
+
     def get_authorization_url(self, state: Optional[str] = None) -> str:
         """Generate Pinterest authorization URL"""
         if not self.client_id:
@@ -143,6 +151,10 @@ class PinterestOAuthService:
                         "pinterest_refresh_token",
                         token_data["refresh_token"]
                     )
+                    logger.info("=" * 60)
+                    logger.info("PINTEREST REFRESH TOKEN (save to .env as PINTEREST_REFRESH_TOKEN):")
+                    logger.info(token_data["refresh_token"])
+                    logger.info("=" * 60)
 
                 logger.info("Pinterest OAuth token successfully exchanged and stored")
                 return token_data
@@ -153,11 +165,16 @@ class PinterestOAuthService:
             raise HTTPException(status_code=500, detail=f"OAuth callback failed: {str(e)}")
 
     async def refresh_access_token(self) -> Optional[str]:
-        """Refresh expired access token"""
+        """Refresh expired access token using stored refresh token."""
         refresh_token = self.redis_client.get("pinterest_refresh_token")
+        if isinstance(refresh_token, bytes):
+            refresh_token = refresh_token.decode()
 
         if not refresh_token:
             return None
+
+        client_id_str = self.client_id.decode() if isinstance(self.client_id, bytes) else str(self.client_id)
+        client_secret_str = self.client_secret.decode() if isinstance(self.client_secret, bytes) else str(self.client_secret)
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -166,21 +183,24 @@ class PinterestOAuthService:
                     "grant_type": "refresh_token",
                     "refresh_token": refresh_token
                 },
-                auth=(self.client_id, self.client_secret)
+                auth=(client_id_str, client_secret_str)
             )
 
             if response.status_code == 200:
                 token_data = response.json()
                 access_token = token_data["access_token"]
-                expires_in = token_data.get("expires_in", 2592000)
+                expires_in = token_data.get("expires_in", 86400)  # Pinterest access tokens last 24h
 
-                self.redis_client.setex(
-                    "pinterest_access_token",
-                    expires_in,
-                    access_token
-                )
+                self.redis_client.setex("pinterest_access_token", expires_in, access_token)
 
+                # Update refresh token if a new one was issued
+                if "refresh_token" in token_data:
+                    self.redis_client.set("pinterest_refresh_token", token_data["refresh_token"])
+
+                logger.info("Pinterest access token refreshed successfully")
                 return access_token
+            else:
+                logger.warning(f"Pinterest token refresh failed: {response.status_code} {response.text}")
 
         return None
 
@@ -190,29 +210,24 @@ class PinterestOAuthService:
         return token.decode() if token else None
 
     async def make_authenticated_request(self, method: str, endpoint: str, **kwargs) -> dict:
-        """Make authenticated API request with automatic token refresh or API key auth"""
+        """Make authenticated API request with automatic token refresh."""
         headers = kwargs.get("headers", {})
 
-        # Try OAuth token first
         token = self.get_access_token()
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
-        # For API key, add it as a query parameter (Pinterest doesn't support Bearer token for API keys)
-        elif self.client_key:
-            # Add API key as query parameter
-            separator = "&" if "?" in endpoint else "?"
-            endpoint = f"{endpoint}{separator}access_token={self.client_key}"
-            logger.info(f"Using Pinterest API key authentication")
-        else:
-            raise HTTPException(status_code=401, detail="No valid Pinterest access token or API key configured")
+        if not token:
+            # No access token - try refreshing using refresh token
+            token = await self.refresh_access_token()
+        if not token:
+            raise HTTPException(status_code=401, detail="No valid Pinterest access token. Complete OAuth flow at /api/v1/auth/pinterest/authorize")
 
+        headers["Authorization"] = f"Bearer {token}"
         kwargs["headers"] = headers
 
         async with httpx.AsyncClient() as client:
             response = await client.request(method, f"{self.BASE_URL}{endpoint}", **kwargs)
 
-            # If token expired, try refreshing once
-            if response.status_code == 401 and not self.client_key:
+            # If token expired mid-session, refresh once and retry
+            if response.status_code == 401:
                 new_token = await self.refresh_access_token()
                 if new_token:
                     headers["Authorization"] = f"Bearer {new_token}"

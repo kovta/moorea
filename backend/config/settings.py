@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     
     # Pinterest API
     pinterest_access_token: Optional[str] = None
+    pinterest_refresh_token: Optional[str] = None
     pinterest_client_id: Optional[str] = None
     pinterest_client_secret: Optional[str] = None
     pinterest_client_key: Optional[str] = None  # Alternative name for API key
