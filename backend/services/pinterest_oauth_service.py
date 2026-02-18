@@ -50,6 +50,7 @@ class PinterestOAuthService:
         self.client_secret = settings.pinterest_client_secret
         self.client_key = settings.pinterest_client_key  # API key for direct authentication
         self.redirect_uri = settings.pinterest_redirect_uri
+        self._refresh_lock = None  # Lazy-initialized asyncio.Lock to prevent concurrent refreshes
 
         # Initialize Redis client or fall back to in-memory cache
         try:
@@ -64,12 +65,14 @@ class PinterestOAuthService:
             self.redis_client = InMemoryCache()
 
         # Pre-load tokens from environment variables (survives restarts)
+        print(f"[PINTEREST] access_token in env: {bool(settings.pinterest_access_token)}", flush=True)
+        print(f"[PINTEREST] refresh_token in env: {bool(settings.pinterest_refresh_token)}", flush=True)
         if settings.pinterest_access_token:
             self.redis_client.set("pinterest_access_token", settings.pinterest_access_token)
-            logger.info("Loaded Pinterest access token from environment")
+            print("[PINTEREST] Loaded access token from environment", flush=True)
         if settings.pinterest_refresh_token:
             self.redis_client.set("pinterest_refresh_token", settings.pinterest_refresh_token)
-            logger.info("Loaded Pinterest refresh token from environment - will auto-refresh access token on first use")
+            print("[PINTEREST] Loaded refresh token from environment - will auto-refresh on first use", flush=True)
 
     def get_authorization_url(self, state: Optional[str] = None) -> str:
         """Generate Pinterest authorization URL"""
@@ -86,7 +89,7 @@ class PinterestOAuthService:
             "response_type": "code",
             "client_id": self.client_id,
             "redirect_uri": self.redirect_uri,
-            "scope": "pins:read boards:read",  # Added boards:read for full Pinterest API access
+            "scope": "pins:read pins:read_secret boards:read boards:read_secret",
             "state": state
         }
 
@@ -166,6 +169,19 @@ class PinterestOAuthService:
 
     async def refresh_access_token(self) -> Optional[str]:
         """Refresh expired access token using stored refresh token."""
+        import asyncio
+        if self._refresh_lock is None:
+            self._refresh_lock = asyncio.Lock()
+        async with self._refresh_lock:
+            return await self._do_refresh()
+
+    async def _do_refresh(self) -> Optional[str]:
+        """Inner refresh logic, called under lock."""
+        # Re-check if another coroutine already refreshed while we were waiting
+        existing = self.get_access_token()
+        if existing:
+            return existing
+
         refresh_token = self.redis_client.get("pinterest_refresh_token")
         if isinstance(refresh_token, bytes):
             refresh_token = refresh_token.decode()

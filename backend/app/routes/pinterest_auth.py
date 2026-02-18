@@ -58,12 +58,8 @@ async def pinterest_oauth_callback(
 
         logger.info(f"Token exchange successful, token_data keys: {token_data.keys()}")
 
-        # Return success response (you might want to redirect to frontend)
-        return {
-            "message": "Pinterest authorization successful",
-            "access_token_expires_in": token_data.get("expires_in"),
-            "scope": token_data.get("scope")
-        }
+        # Redirect back to frontend app after successful authorization
+        return RedirectResponse(url=f"{settings.frontend_url}?pinterest_auth=success", status_code=302)
 
     except HTTPException as he:
         logger.error(f"HTTPException in callback: {he.detail}")

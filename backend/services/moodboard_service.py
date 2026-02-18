@@ -453,17 +453,29 @@ class MoodboardService:
         except asyncio.TimeoutError:
             logger.warning("⚠️ API calls timed out after 5 seconds, using partial results")
         
-        # Remove duplicates by URL and limit total
+        # Deduplicate and interleave by source so Pinterest isn't crowded out by Unsplash/Pexels
+        from collections import defaultdict
         seen_urls = set()
-        unique_candidates = []
+        by_source = defaultdict(list)
         for candidate in all_candidates:
             if candidate.url not in seen_urls:
                 seen_urls.add(candidate.url)
-                unique_candidates.append(candidate)
-                if len(unique_candidates) >= settings.max_candidates:
-                    break
-        
-        logger.info(f"⚡ Fast fetch: {len(unique_candidates)} unique candidates (target: {settings.max_candidates})")
+                by_source[candidate.source_api].append(candidate)
+
+        # Round-robin across sources to ensure proportional representation
+        unique_candidates = []
+        source_lists = list(by_source.values())
+        while len(unique_candidates) < settings.max_candidates:
+            added = False
+            for source_list in source_lists:
+                if source_list and len(unique_candidates) < settings.max_candidates:
+                    unique_candidates.append(source_list.pop(0))
+                    added = True
+            if not added:
+                break
+
+        source_counts = {src: len(imgs) for src, imgs in by_source.items()}
+        logger.info(f"⚡ Fast fetch: {len(unique_candidates)} unique candidates (target: {settings.max_candidates}), remaining by source: {source_counts}")
 
         # Fallback: if no candidates found, try generic keywords via Unsplash only
         if not unique_candidates:

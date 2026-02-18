@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     pinterest_client_key: Optional[str] = None  # Alternative name for API key
     pinterest_redirect_uri: str = "http://localhost:3000/auth/pinterest/callback"
     backend_url: str = "http://localhost:8002"  # Backend API URL for OAuth redirects
+    frontend_url: str = "http://localhost:3000"  # Frontend URL for post-OAuth redirect
     use_mock_pinterest: bool = False  # Toggle between mock and real API
     
     # reCAPTCHA
@@ -110,7 +111,8 @@ class Settings(BaseSettings):
     embedding_cache_ttl: int = 86400 * 30  # 30 days
     
     class Config:
-        env_file = ".env"
+        # Absolute path so settings always finds backend/.env regardless of CWD
+        env_file = str(Path(__file__).parent.parent / ".env")
         env_file_encoding = "utf-8"
 
 

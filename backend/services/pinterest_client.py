@@ -89,14 +89,27 @@ class PinterestAPIClient:
                         break
 
                     # Get the best image URL available
-                    images_data = pin.get("images", {})
+                    # Pinterest v5 API returns images under media.images with keys like "1200x", "600x", "150x150"
+                    media = pin.get("media", {})
+                    images_data = media.get("images", pin.get("images", {}))
                     image_url = None
 
-                    # Prefer original size, fallback to others
-                    for size in ["original", "564x", "236x", "136x"]:
-                        if size in images_data and "url" in images_data[size]:
-                            image_url = images_data[size]["url"]
-                            break
+                    # Try v5 API size keys first, then v3 fallbacks
+                    preferred_sizes = ["1200x", "600x", "400x300", "236x", "150x150", "original", "564x", "136x"]
+                    for size in preferred_sizes:
+                        if size in images_data:
+                            entry = images_data[size]
+                            if isinstance(entry, dict) and "url" in entry:
+                                image_url = entry["url"]
+                                break
+                    # Last resort: take the first available image entry
+                    if not image_url and images_data:
+                        first = next(iter(images_data.values()), None)
+                        if isinstance(first, dict):
+                            image_url = first.get("url")
+
+                    if not image_url:
+                        logger.debug(f"Pinterest pin {pin.get('id')} has no extractable image. media keys: {list(images_data.keys())}")
 
                     if image_url:
                         candidate = ImageCandidate(
