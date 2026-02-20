@@ -207,13 +207,16 @@ class PinterestOAuthService:
                 access_token = token_data["access_token"]
                 expires_in = token_data.get("expires_in", 86400)  # Pinterest access tokens last 24h
 
+                # Log scopes for debugging
+                token_scope = token_data.get("scope", "no scope returned")
+                logger.info(f"Pinterest access token refreshed successfully. Scopes: {token_scope}")
+
                 self.redis_client.setex("pinterest_access_token", expires_in, access_token)
 
                 # Update refresh token if a new one was issued
                 if "refresh_token" in token_data:
                     self.redis_client.set("pinterest_refresh_token", token_data["refresh_token"])
 
-                logger.info("Pinterest access token refreshed successfully")
                 return access_token
             else:
                 logger.warning(f"Pinterest token refresh failed: {response.status_code} {response.text}")
@@ -255,7 +258,17 @@ class PinterestOAuthService:
                     detail=f"Pinterest API error: {response.text}"
                 )
 
-            return response.json()
+            result = response.json()
+
+            # Debug logging for search endpoint
+            if "/search/pins" in endpoint:
+                logger.info(f"Pinterest search endpoint: {endpoint}")
+                logger.info(f"Pinterest search response keys: {list(result.keys())}")
+                logger.info(f"Pinterest search items count: {len(result.get('items', []))}")
+                if len(result.get('items', [])) == 0:
+                    logger.warning(f"Pinterest search returned 0 items. Full response: {result}")
+
+            return result
 
 # Global service instance - use mock or real based on settings
 try:

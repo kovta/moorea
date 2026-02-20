@@ -79,6 +79,14 @@ class PinterestAPIClient:
                 pins = search_results.get("items", [])
                 logger.info(f"Pinterest search returned {len(pins)} pins for '{aesthetic_query}'")
 
+                # Debug: log response structure when no pins found
+                if not pins:
+                    logger.warning(f"Pinterest returned 0 pins. Full response keys: {list(search_results.keys())}")
+                    if "error" in search_results:
+                        logger.error(f"Pinterest API error: {search_results.get('error')}")
+                    if "message" in search_results:
+                        logger.warning(f"Pinterest API message: {search_results.get('message')}")
+
                 if not pins:
                     logger.info(f"No more pins available for '{aesthetic_query}'")
                     break
