@@ -547,7 +547,15 @@ class MoodboardService:
             return []
         final_count = min(len(candidates), settings.final_moodboard_size)
         logger.info(f"Selecting top {final_count} candidates from {len(candidates)} (API relevance order)")
-        return candidates[:final_count]
+
+        final_candidates = candidates[:final_count]
+
+        # Log source distribution in final selection
+        from collections import Counter
+        final_sources = Counter(c.source_api for c in final_candidates)
+        logger.info(f"🎯 Final {final_count} images by source: {dict(final_sources)}")
+
+        return final_candidates
 
     async def _apply_classification_filters(self, image_content: bytes, all_scores: List[AestheticScore]) -> List[AestheticScore]:
         """No-op: extra per-category CLIP calls were removed for speed."""
