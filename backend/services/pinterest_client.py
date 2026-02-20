@@ -55,6 +55,128 @@ class PinterestAPIClient:
 
         return await self.oauth_service.make_authenticated_request("GET", endpoint)
 
+    async def get_boards(self, limit: int = 100, bookmark: Optional[str] = None) -> Dict[str, Any]:
+        """Get user's Pinterest boards."""
+        params = {"page_size": min(limit, 100)}
+        if bookmark:
+            params["bookmark"] = bookmark
+
+        query_string = f"?{urlencode(params)}" if params else ""
+        endpoint = f"/v5/boards{query_string}"
+        return await self.oauth_service.make_authenticated_request("GET", endpoint)
+
+    async def get_board_pins(
+        self,
+        board_id: str,
+        limit: int = 25,
+        bookmark: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Get pins from a specific board."""
+        params = {"page_size": min(limit, 100)}
+        if bookmark:
+            params["bookmark"] = bookmark
+
+        query_string = f"?{urlencode(params)}" if params else ""
+        endpoint = f"/v5/boards/{board_id}/pins{query_string}"
+        return await self.oauth_service.make_authenticated_request("GET", endpoint)
+
+    async def search_boards_for_pins(
+        self,
+        aesthetic_query: str,
+        max_images: int = 20
+    ) -> List[ImageCandidate]:
+        """Search user's boards for pins matching the aesthetic query."""
+        import logging
+        logger = logging.getLogger(__name__)
+
+        images = []
+        query_lower = aesthetic_query.lower()
+        query_words = set(query_lower.split())
+
+        try:
+            # Get user's boards
+            boards_response = await self.get_boards(limit=100)
+            boards = boards_response.get("items", [])
+
+            logger.info(f"Found {len(boards)} Pinterest boards to search")
+
+            # Score boards by relevance to query
+            scored_boards = []
+            for board in boards:
+                board_name = board.get("name", "").lower()
+                board_desc = board.get("description", "").lower()
+                board_text = f"{board_name} {board_desc}"
+
+                # Simple keyword matching score
+                score = sum(1 for word in query_words if word in board_text)
+
+                if score > 0:
+                    scored_boards.append((score, board))
+
+            # Sort by relevance
+            scored_boards.sort(reverse=True, key=lambda x: x[0])
+
+            logger.info(f"Found {len(scored_boards)} relevant boards for '{aesthetic_query}'")
+
+            # Get pins from top matching boards
+            pins_per_board = max(5, max_images // max(len(scored_boards[:3]), 1))
+
+            for score, board in scored_boards[:3]:  # Top 3 most relevant boards
+                if len(images) >= max_images:
+                    break
+
+                board_id = board.get("id")
+                board_name = board.get("name", "Unknown")
+
+                logger.info(f"Getting pins from board '{board_name}' (score: {score})")
+
+                pins_response = await self.get_board_pins(board_id, limit=pins_per_board)
+                pins = pins_response.get("items", [])
+
+                logger.info(f"Board '{board_name}' returned {len(pins)} pins")
+
+                # Extract images from pins (same logic as search_and_extract_images)
+                for pin in pins:
+                    if len(images) >= max_images:
+                        break
+
+                    media = pin.get("media", {})
+                    images_data = media.get("images", pin.get("images", {}))
+                    image_url = None
+
+                    preferred_sizes = ["1200x", "600x", "400x300", "236x", "150x150", "original", "564x", "136x"]
+                    for size in preferred_sizes:
+                        if size in images_data:
+                            entry = images_data[size]
+                            if isinstance(entry, dict) and "url" in entry:
+                                image_url = entry["url"]
+                                break
+
+                    if not image_url and images_data:
+                        first = next(iter(images_data.values()), None)
+                        if isinstance(first, dict):
+                            image_url = first.get("url")
+
+                    if image_url:
+                        candidate = ImageCandidate(
+                            id=pin.get("id", ""),
+                            url=image_url,
+                            photographer=pin.get("creator", {}).get("username", "Pinterest User"),
+                            source_api="pinterest",
+                            pinterest_url=pin.get("link", ""),
+                            pinterest_board=board_name,
+                            title=pin.get("title", ""),
+                            description=pin.get("description", "")
+                        )
+                        images.append(candidate)
+
+            logger.info(f"Board search extracted {len(images)} images for '{aesthetic_query}'")
+            return images
+
+        except Exception as e:
+            logger.error(f"Error searching boards for '{aesthetic_query}': {str(e)}", exc_info=True)
+            return []
+
     async def search_and_extract_images(
         self,
         aesthetic_query: str,
@@ -88,7 +210,9 @@ class PinterestAPIClient:
                         logger.warning(f"Pinterest API message: {search_results.get('message')}")
 
                 if not pins:
-                    logger.info(f"No more pins available for '{aesthetic_query}'")
+                    # Public search returned 0 results - fall back to searching user's boards
+                    logger.info(f"Public search returned 0 pins, falling back to board search for '{aesthetic_query}'")
+                    return await self.search_boards_for_pins(aesthetic_query, max_images)
                     break
 
                 # Extract image data from pins

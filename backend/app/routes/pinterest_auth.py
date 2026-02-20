@@ -104,3 +104,45 @@ async def search_pinterest(query: str = Query(..., description="Search query for
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Pinterest search failed: {str(e)}")
+
+@router.get("/me")
+async def get_pinterest_user_info():
+    """Get current Pinterest user information to verify authentication and scopes."""
+    try:
+        response = await pinterest_oauth.make_authenticated_request(
+            "GET",
+            "/v5/user_account"
+        )
+        return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get user info: {str(e)}")
+
+@router.get("/boards")
+async def get_pinterest_boards():
+    """Get user's Pinterest boards to verify board access."""
+    try:
+        response = await pinterest_oauth.make_authenticated_request(
+            "GET",
+            "/v5/boards"
+        )
+        return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get boards: {str(e)}")
+
+@router.get("/board/{board_id}/pins")
+async def get_board_pins(board_id: str):
+    """Get pins from a specific board."""
+    try:
+        response = await pinterest_oauth.make_authenticated_request(
+            "GET",
+            f"/v5/boards/{board_id}/pins"
+        )
+        return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get board pins: {str(e)}")
