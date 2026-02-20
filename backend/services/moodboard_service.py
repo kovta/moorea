@@ -463,6 +463,10 @@ class MoodboardService:
                 seen_urls.add(candidate.url)
                 by_source[candidate.source_api].append(candidate)
 
+        # Log source counts BEFORE round-robin
+        source_counts_before = {src: len(imgs) for src, imgs in by_source.items()}
+        logger.info(f"📸 After deduplication by source: {source_counts_before}")
+
         # Round-robin across sources to ensure proportional representation
         unique_candidates = []
         source_lists = list(by_source.values())
