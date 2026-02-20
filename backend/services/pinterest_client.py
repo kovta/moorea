@@ -126,8 +126,15 @@ class PinterestAPIClient:
                 if score > 0:
                     scored_boards.append((score, board))
 
-            # Sort by relevance
-            scored_boards.sort(reverse=True, key=lambda x: x[0])
+            # If no keyword matches, fall back to top boards by pin count
+            if not scored_boards:
+                logger.info(f"No keyword matches for '{aesthetic_query}', using top boards by pin count")
+                # Sort boards by pin count and use top ones
+                boards_by_pins = sorted(boards, key=lambda b: b.get("pin_count", 0), reverse=True)
+                scored_boards = [(0, board) for board in boards_by_pins[:5]]  # Top 5 boards
+            else:
+                # Sort by relevance
+                scored_boards.sort(reverse=True, key=lambda x: x[0])
 
             logger.info(f"Found {len(scored_boards)} relevant boards for '{aesthetic_query}'")
 
