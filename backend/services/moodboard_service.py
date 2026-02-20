@@ -467,15 +467,32 @@ class MoodboardService:
         source_counts_before = {src: len(imgs) for src, imgs in by_source.items()}
         logger.info(f"📸 After deduplication by source: {source_counts_before}")
 
-        # Round-robin across sources to ensure proportional representation
+        # Weighted round-robin: Pinterest 50%, Unsplash 25%, Pexels 25%
         unique_candidates = []
-        source_lists = list(by_source.values())
+        pinterest_list = by_source.get('pinterest', [])
+        unsplash_list = by_source.get('unsplash', [])
+        pexels_list = by_source.get('pexels', [])
+
+        # Pattern: P, P, U, Px (repeat) to achieve 2:1:1 ratio
         while len(unique_candidates) < settings.max_candidates:
             added = False
-            for source_list in source_lists:
-                if source_list and len(unique_candidates) < settings.max_candidates:
-                    unique_candidates.append(source_list.pop(0))
+
+            # Add 2 Pinterest images
+            for _ in range(2):
+                if pinterest_list and len(unique_candidates) < settings.max_candidates:
+                    unique_candidates.append(pinterest_list.pop(0))
                     added = True
+
+            # Add 1 Unsplash image
+            if unsplash_list and len(unique_candidates) < settings.max_candidates:
+                unique_candidates.append(unsplash_list.pop(0))
+                added = True
+
+            # Add 1 Pexels image
+            if pexels_list and len(unique_candidates) < settings.max_candidates:
+                unique_candidates.append(pexels_list.pop(0))
+                added = True
+
             if not added:
                 break
 
