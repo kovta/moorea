@@ -148,12 +148,15 @@ class PinterestAPIClient:
                 board_id = board.get("id")
                 board_name = board.get("name", "Unknown")
 
-                logger.info(f"Getting pins from board '{board_name}' (score: {score})")
+                logger.info(f"Getting pins from board '{board_name}' (id: {board_id}, score: {score})")
 
-                pins_response = await self.get_board_pins(board_id, limit=pins_per_board)
-                pins = pins_response.get("items", [])
-
-                logger.info(f"Board '{board_name}' returned {len(pins)} pins")
+                try:
+                    pins_response = await self.get_board_pins(board_id, limit=pins_per_board)
+                    pins = pins_response.get("items", [])
+                    logger.info(f"Board '{board_name}' returned {len(pins)} pins")
+                except Exception as e:
+                    logger.error(f"Failed to get pins from board '{board_name}': {str(e)}")
+                    continue
 
                 # Extract images from pins (same logic as search_and_extract_images)
                 for pin in pins:
