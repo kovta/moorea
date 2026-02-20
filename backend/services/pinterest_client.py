@@ -278,6 +278,12 @@ class PinterestAPIClient:
                 await asyncio.sleep(0.1)
 
             except Exception as e:
+                # Check if this is a Partner API access denied error
+                error_str = str(e)
+                if "pin_search" in error_str or "401" in error_str:
+                    logger.warning(f"Partner API access denied, falling back to board search for '{aesthetic_query}'")
+                    return await self.search_boards_for_pins(aesthetic_query, max_images)
+
                 logger.error(f"Error fetching Pinterest images for '{aesthetic_query}': {str(e)}", exc_info=True)
                 break
 
