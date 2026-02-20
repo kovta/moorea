@@ -428,10 +428,11 @@ class MoodboardService:
             return await self._local_folder_candidates()
         
         try:
-            # Use asyncio.wait_for with shorter timeout for speed
+            # Use asyncio.wait_for with timeout for API responses
+            # Pinterest board search needs more time (list boards + get pins)
             results = await asyncio.wait_for(
                 asyncio.gather(*all_tasks, return_exceptions=True),
-                timeout=8.0  # Allow a bit more time for provider responses
+                timeout=15.0  # Allow time for Pinterest board search
             )
             
             successful_count = 0
@@ -451,7 +452,7 @@ class MoodboardService:
             logger.info(f"📊 API Results: {successful_count} succeeded, {failed_count} failed, {len(all_candidates)} total images fetched")
                     
         except asyncio.TimeoutError:
-            logger.warning("⚠️ API calls timed out after 5 seconds, using partial results")
+            logger.warning("⚠️ API calls timed out after 15 seconds, using partial results")
         
         # Deduplicate and interleave by source so Pinterest isn't crowded out by Unsplash/Pexels
         from collections import defaultdict
