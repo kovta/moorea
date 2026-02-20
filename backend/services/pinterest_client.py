@@ -57,7 +57,8 @@ class PinterestAPIClient:
 
     async def get_boards(self, limit: int = 100, bookmark: Optional[str] = None) -> Dict[str, Any]:
         """Get user's Pinterest boards."""
-        params = {"page_size": min(limit, 100)}
+        # Pinterest v5 API might not use page_size parameter - try without params first
+        params = {}
         if bookmark:
             params["bookmark"] = bookmark
 
@@ -72,7 +73,8 @@ class PinterestAPIClient:
         bookmark: Optional[str] = None
     ) -> Dict[str, Any]:
         """Get pins from a specific board."""
-        params = {"page_size": min(limit, 100)}
+        # Pinterest v5 API might not use page_size - try without limit for now
+        params = {}
         if bookmark:
             params["bookmark"] = bookmark
 
@@ -96,6 +98,12 @@ class PinterestAPIClient:
         try:
             # Get user's boards
             boards_response = await self.get_boards(limit=100)
+            logger.info(f"DEBUG: Boards API response keys: {list(boards_response.keys())}")
+            logger.info(f"DEBUG: Boards API response type: {type(boards_response)}")
+            if isinstance(boards_response, dict) and "items" in boards_response:
+                logger.info(f"DEBUG: Items count in response: {len(boards_response['items'])}")
+            else:
+                logger.warning(f"DEBUG: Full boards response: {boards_response}")
             boards = boards_response.get("items", [])
 
             logger.info(f"Found {len(boards)} Pinterest boards to search")
