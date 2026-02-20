@@ -20,16 +20,21 @@ class PinterestAPIClient:
         limit: int = 25,
         bookmark: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Search for pins using Pinterest API."""
+        """Search for pins using Pinterest Partner API (public search).
+
+        Uses /v5/search/partner/pins endpoint which searches public Pinterest content.
+        Note: This endpoint is in beta and may not be available to all apps.
+        """
         params = {
-            "query": query,
-            "limit": min(limit, 100)  # Pinterest API max is 100
+            "term": query,  # Partner API uses 'term' not 'query'
+            "country_code": "US",  # Required parameter
+            "limit": min(limit, 50)  # Partner API max is 50
         }
 
         if bookmark:
             params["bookmark"] = bookmark
 
-        endpoint = f"/v5/search/pins?{urlencode(params)}"
+        endpoint = f"/v5/search/partner/pins?{urlencode(params)}"
 
         return await self.oauth_service.make_authenticated_request("GET", endpoint)
 
