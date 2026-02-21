@@ -138,28 +138,32 @@ class PinterestAPIClient:
 
             logger.info(f"Found {len(scored_boards)} relevant boards for '{aesthetic_query}'")
 
-            # Get pins from top matching boards
-            pins_per_board = max(5, max_images // max(len(scored_boards[:3]), 1))
+            # Get pins from top matching boards (fetch from multiple boards for variety)
+            # Take 2-3 images per board to ensure diversity
+            images_per_board = max(2, max_images // len(scored_boards[:5]))
+            num_boards_to_fetch = min(5, len(scored_boards))
 
-            for score, board in scored_boards[:3]:  # Top 3 most relevant boards
-                if len(images) >= max_images:
-                    break
+            logger.info(f"Fetching {images_per_board} images from each of top {num_boards_to_fetch} boards")
 
+            for score, board in scored_boards[:num_boards_to_fetch]:
                 board_id = board.get("id")
                 board_name = board.get("name", "Unknown")
 
                 logger.info(f"Getting pins from board '{board_name}' (id: {board_id}, score: {score})")
 
                 try:
-                    pins_response = await self.get_board_pins(board_id, limit=pins_per_board)
+                    pins_response = await self.get_board_pins(board_id, limit=25)
                     pins = pins_response.get("items", [])
                     logger.info(f"Board '{board_name}' returned {len(pins)} pins")
                 except Exception as e:
                     logger.error(f"Failed to get pins from board '{board_name}': {str(e)}")
                     continue
 
-                # Extract images from pins (same logic as search_and_extract_images)
+                # Extract limited number of images from this board for variety
+                board_images_count = 0
                 for pin in pins:
+                    if board_images_count >= images_per_board:
+                        break
                     if len(images) >= max_images:
                         break
 
@@ -192,6 +196,7 @@ class PinterestAPIClient:
                             description=pin.get("description", "")
                         )
                         images.append(candidate)
+                        board_images_count += 1
 
             logger.info(f"Board search extracted {len(images)} images for '{aesthetic_query}'")
             return images
