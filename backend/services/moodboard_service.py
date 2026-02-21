@@ -558,21 +558,46 @@ class MoodboardService:
     
     async def _rerank_candidates(self, original_image: bytes,
                                 candidates: List[ImageCandidate]) -> List[ImageCandidate]:
-        """Return top candidates in API relevance order (no CLIP re-ranking for speed)."""
+        """Re-rank candidates using SigLIP similarity to match the input image's vibe."""
         if not candidates:
             logger.warning("No candidates to select from!")
             return []
+
         final_count = min(len(candidates), settings.final_moodboard_size)
-        logger.info(f"Selecting top {final_count} candidates from {len(candidates)} (API relevance order)")
+        logger.info(f"🔄 Re-ranking {len(candidates)} candidates using SigLIP similarity...")
 
-        final_candidates = candidates[:final_count]
+        try:
+            # Get embedding for the original image
+            original_embedding = await clip_service.get_image_embedding(original_image)
 
-        # Log source distribution in final selection
-        from collections import Counter
-        final_sources = Counter(c.source_api for c in final_candidates)
-        logger.info(f"🎯 Final {final_count} images by source: {dict(final_sources)}")
+            # Get candidate URLs
+            candidate_urls = [c.url for c in candidates]
 
-        return final_candidates
+            # Calculate similarity scores for all candidates
+            similarities = await clip_service.batch_similarity(original_embedding, candidate_urls)
+
+            # Pair candidates with their similarity scores
+            scored_candidates = list(zip(candidates, similarities))
+
+            # Sort by similarity (highest first)
+            scored_candidates.sort(key=lambda x: x[1], reverse=True)
+
+            # Take top N
+            final_candidates = [c for c, score in scored_candidates[:final_count]]
+
+            # Log source distribution and similarity scores
+            from collections import Counter
+            final_sources = Counter(c.source_api for c in final_candidates)
+            top_scores = [score for _, score in scored_candidates[:final_count]]
+            logger.info(f"🎯 Final {final_count} images by source: {dict(final_sources)}")
+            logger.info(f"📊 SigLIP similarity range: [{min(top_scores):.3f}, {max(top_scores):.3f}]")
+
+            return final_candidates
+
+        except Exception as e:
+            logger.error(f"Error in SigLIP re-ranking: {str(e)}, falling back to API order")
+            # Fallback to API order if re-ranking fails
+            return candidates[:final_count]
 
     async def _apply_classification_filters(self, image_content: bytes, all_scores: List[AestheticScore]) -> List[AestheticScore]:
         """No-op: extra per-category CLIP calls were removed for speed."""
